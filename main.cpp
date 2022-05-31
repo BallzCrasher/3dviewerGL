@@ -173,12 +173,11 @@ int main(){
 	glUniform1i(glad_glGetUniformLocation(shader.ID , "ourTexture") , 0);
 	glUniform1i(glad_glGetUniformLocation(shader.ID , "ourTexture2") , 1);
     glBindTexture(GL_TEXTURE_2D,texture);
-	shader.setVec3Uniform("shift",0,0,0);
     //glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
 
     glm::mat4 trans(1.0f);
     trans = glm::rotate(trans , glm::radians(90.0f) , glm::vec3(0.0f,0.0f,1.0f));
-	glm::scale(trans,glm::vec3(0.1,0.1,0.1));
+	trans = glm::scale(trans,glm::vec3(0.5,0.5,0.5));
 
 	glUniformMatrix4fv(glGetUniformLocation(shader.ID,"transform")
                             ,1,GL_FALSE,glm::value_ptr(trans));
