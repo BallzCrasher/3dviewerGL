@@ -8,6 +8,7 @@
 #include "includes/glm/gtc/matrix_transform.hpp"
 #include "includes/glm/gtc/type_ptr.hpp"
 #include "includes/Shader.h"
+#include "includes/glm/matrix.hpp"
 #define STB_IMAGE_IMPLEMENTATION
 #include "includes/stb_image.h"
 
@@ -175,12 +176,12 @@ int main(){
     glBindTexture(GL_TEXTURE_2D,texture);
     //glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
 
-    glm::mat4 trans(1.0f);
-    trans = glm::rotate(trans , glm::radians(90.0f) , glm::vec3(0.0f,0.0f,1.0f));
-	trans = glm::scale(trans,glm::vec3(0.5,0.5,0.5));
+   // glm::mat4 trans(1.0f);
+   // trans = glm::rotate(trans , glm::radians(90.0f) , glm::vec3(0.0f,0.0f,1.0f));
+   // trans = glm::scale(trans,glm::vec3(0.5,0.5,0.5));
 
-	glUniformMatrix4fv(glGetUniformLocation(shader.ID,"transform")
-                            ,1,GL_FALSE,glm::value_ptr(trans));
+   // glUniformMatrix4fv(glGetUniformLocation(shader.ID,"transform")
+   //                         ,1,GL_FALSE,glm::value_ptr(trans));
     
     while (!glfwWindowShouldClose(window))
     {
@@ -196,10 +197,29 @@ int main(){
 
 		glUniform1f(glGetUniformLocation(shader.ID , "changer") , changer);
 
+
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D , texture);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D , texture2);
+
+		glm::mat4 trans2(1.0f);
+		trans2 = glm::translate(trans2, glm::vec3(-0.5f , 0.5f , 0.0f));
+		float scalar = abs(sin(glfwGetTime()));
+		trans2 = glm::scale(trans2,glm::vec3(scalar,scalar,1.0f));
+
+		glUniformMatrix4fv(glGetUniformLocation(shader.ID,"transform")
+                            ,1,GL_FALSE,glm::value_ptr(trans2));
+
+        glBindVertexArray(VAO);
+        glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT,0);
+
+		glm::mat4 trans(1.0f);
+		trans = glm::rotate(trans , (float)glfwGetTime() , glm::vec3(0.0f,0.0f,1.0f));
+		trans = glm::translate(trans, glm::vec3(0.5f , -0.5f , 0.0f));
+
+		glUniformMatrix4fv(glGetUniformLocation(shader.ID,"transform")
+                            ,1,GL_FALSE,glm::value_ptr(trans));
 
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT,0);
