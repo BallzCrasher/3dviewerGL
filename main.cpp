@@ -1,7 +1,8 @@
 #include <glad/glad.h>
-#include<GLFW/glfw3.h>
-#include<iostream>
+#include <GLFW/glfw3.h>
+#include <iostream>
 #include <math.h>
+#include <iomanip>
 #include <chrono>
 #include "includes/glm/fwd.hpp"
 #include "includes/glm/glm.hpp"
@@ -33,6 +34,18 @@ void processInput(GLFWwindow* window){
     }
 }
 
+
+std::ostream& operator<<(std::ostream& stream, glm::mat4 mat){
+	stream << std::fixed << std::setprecision(2);
+	auto p = glm::value_ptr(mat);
+	for(int j = 0;j < 4; j++){
+		stream << "| "; 
+		for(int i= 0; i < 4;i++) std::cout << *(p+4*j+i) << ' '; 
+		stream << " |\n";
+	}
+	stream << std::endl;
+	return stream;
+}
 
 
 void CreateCircle(float verts[],int indicies[], int resolution, float radius){
@@ -202,21 +215,26 @@ int main(){
 		glBindTexture(GL_TEXTURE_2D , texture);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D , texture2);
-
+	
 		glm::mat4 trans2(1.0f);
-		trans2 = glm::translate(trans2, glm::vec3(-0.5f , 0.5f , 0.0f));
 		float scalar = abs(sin(glfwGetTime()));
+		trans2 = glm::translate(trans2, glm::vec3(-0.5f , 0.5f , 0.0f));
 		trans2 = glm::scale(trans2,glm::vec3(scalar,scalar,1.0f));
 
-		glUniformMatrix4fv(glGetUniformLocation(shader.ID,"transform")
+		glUniformMatrix4fv( glGetUniformLocation(shader.ID,"transform")
                             ,1,GL_FALSE,glm::value_ptr(trans2));
 
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT,0);
+		
 
 		glm::mat4 trans(1.0f);
-		trans = glm::rotate(trans , (float)glfwGetTime() , glm::vec3(0.0f,0.0f,1.0f));
 		trans = glm::translate(trans, glm::vec3(0.5f , -0.5f , 0.0f));
+		trans = glm::rotate(trans , (float)glfwGetTime() , glm::vec3(0.0f,0.0f,1.0f));
+
+		trans =  trans * trans2;	
+
+		std::cout << trans2;
 
 		glUniformMatrix4fv(glGetUniformLocation(shader.ID,"transform")
                             ,1,GL_FALSE,glm::value_ptr(trans));
