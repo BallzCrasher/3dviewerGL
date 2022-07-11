@@ -6,6 +6,7 @@
 #include <chrono>
 #include "includes/glm/ext/matrix_transform.hpp"
 #include "includes/glm/fwd.hpp"
+#include "includes/glm/geometric.hpp"
 #include "includes/glm/glm.hpp"
 #include "includes/glm/gtc/matrix_transform.hpp"
 #include "includes/glm/gtc/type_ptr.hpp"
@@ -14,21 +15,40 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "includes/stb_image.h"
 
-float changer = 0.01f;
-
 void framebuffer_size_callback(GLFWwindow* window, int width , int height){
     glViewport(0,0,width,height);
 }
 
+float changer = 0.01f;
+float cameraSpeed = 2.5f;
+float deltaTime = 0.0f;
+
+glm::vec3 cameraPos   = glm::vec3(0.0f,0.0f,3.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f,0.0f,-1.0f);
+glm::vec3 cameraUp    = glm::vec3(0.0f,1.0f,0.0f);
+
 void processInput(GLFWwindow* window){
-    if (glfwGetKey(window,GLFW_KEY_ENTER) == GLFW_PRESS){
+    if (glfwGetKey(window,GLFW_KEY_ENTER) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
-    }
+    
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+		cameraPos += deltaTime * cameraSpeed * cameraFront;	
+	
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+		cameraPos -= deltaTime * cameraSpeed * cameraFront;	
+	
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+		cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed * deltaTime;	
+	
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed * deltaTime;
+	
 
     if (glfwGetKey(window,GLFW_KEY_UP) == GLFW_PRESS){
         changer += 0.01f;
         if (changer > 0.99) changer -= 0.01f;
     }
+
     if (glfwGetKey(window,GLFW_KEY_DOWN) == GLFW_PRESS){
         changer -= 0.01f;
         if (changer < 0.01) changer += 0.01f;
@@ -237,6 +257,8 @@ int main(){
     //glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
 	glEnable(GL_DEPTH_TEST);
 
+	float currentFrame,lastFrame = 0.0f;
+
     while (!glfwWindowShouldClose(window))
     {
         processInput(window);
@@ -254,14 +276,25 @@ int main(){
 		glUniform1f(glGetUniformLocation(shader.ID , "changer") , changer);
 	
 		//model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
+
+		//glm::vec3 cameraPos = glm::vec3(0.0f,0.0f,3.0f);
+		//glm::vec3 cameraTarget = glm::vec3(0.0f , 0.0f , 0.0f);
+		//glm::vec3 cameraDir = glm::normalize(cameraPos - cameraTarget);
+		//glm::vec3 cameraRight = glm::normalize(glm::cross(glm::vec3(0.0f , 1.0f, 0.0f), cameraDir));
+		//glm::vec3 cameraUp = glm::cross(cameraDir , cameraRight);
 	
+		//Calculate Delta Time
+		currentFrame = glfwGetTime();
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+
         glBindVertexArray(VAO);
 
-		glm::mat4 view = glm::mat4(1.0f);
-		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+		glm::mat4 view = glm::lookAt(cameraPos,cameraPos + cameraFront , cameraUp);
+		//view = glm::translate(view, glm::vec3(0.0f, sinf(glfwGetTime()) , -3.0f));
 
 		glm::mat4 projection;
-		projection = glm::perspective(glm::radians(30.0f + abs(sinf(glfwGetTime())) * 60.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+		projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
 
 		glUniformMatrix4fv(glGetUniformLocation(shader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
 		glUniformMatrix4fv(glGetUniformLocation(shader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
@@ -270,6 +303,7 @@ int main(){
 			glm::mat4 model = glm::mat4(1.0f);
 			model = glm::translate(model, cubePositions[i]);
 			float angle = 20.0f * i;
+			if (i % 3 == 0) angle *= (float)glfwGetTime();
 			model = glm::rotate(model , glm::radians(angle) , glm::vec3(1.0f, 0.3f, 0.5f) );
 			glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
