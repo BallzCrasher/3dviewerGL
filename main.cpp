@@ -15,17 +15,55 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "includes/stb_image.h"
 
+#define WIDTH 800
+#define HIEGHT 600
+
+float lastMouseX = WIDTH / 2, lastMouseY = HIEGHT / 2;
+const float mouse_sensitivity = 0.1f;
+float yaw = -90.0f;
+float pitch = 0.0f;
+float changer = 0.01f;
+float cameraSpeed = 2.5f;
+float deltaTime = 0.0f;
+bool firstMouseEnter = true;
+glm::vec3 cameraPos   = glm::vec3(0.0f,0.0f,3.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f,0.0f,-1.0f);
+glm::vec3 cameraUp    = glm::vec3(0.0f,1.0f,0.0f);
+
 void framebuffer_size_callback(GLFWwindow* window, int width , int height){
     glViewport(0,0,width,height);
 }
 
-float changer = 0.01f;
-float cameraSpeed = 2.5f;
-float deltaTime = 0.0f;
+void mouse_callback(GLFWwindow* window, double xpos , double ypos){
+	if(firstMouseEnter){
+		lastMouseX = xpos;	
+		lastMouseY = ypos;	
+		firstMouseEnter = false;
+	}
 
-glm::vec3 cameraPos   = glm::vec3(0.0f,0.0f,3.0f);
-glm::vec3 cameraFront = glm::vec3(0.0f,0.0f,-1.0f);
-glm::vec3 cameraUp    = glm::vec3(0.0f,1.0f,0.0f);
+
+	float xoffset = xpos - lastMouseX;	
+	float yoffset = lastMouseY - ypos;
+
+	lastMouseX = xpos;
+	lastMouseY = ypos;
+
+	xoffset *= mouse_sensitivity;
+	yoffset *= mouse_sensitivity;
+
+	yaw   += xoffset;
+	pitch += yoffset;
+
+	if(pitch > 89.0f) pitch = 89.0f;
+	if(pitch < -89.0f) pitch = -89.0f;
+
+	glm::vec3 direction;
+	direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+	direction.y = sin(glm::radians(pitch));
+	direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+	cameraFront = glm::normalize(direction);
+}
+
 
 void processInput(GLFWwindow* window){
     if (glfwGetKey(window,GLFW_KEY_ENTER) == GLFW_PRESS)
@@ -96,7 +134,7 @@ int main(){
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR,3);
     glfwWindowHint(GLFW_OPENGL_PROFILE,GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(800,600,"OpenGL Window",NULL,NULL);
+    GLFWwindow* window = glfwCreateWindow(WIDTH,HIEGHT,"OpenGL Window",NULL,NULL);
     if (window == NULL){
         std::cout<<"ERROR :: GLFWWindow not created !! "<<'\n';
         glfwTerminate();
@@ -111,6 +149,9 @@ int main(){
         glfwTerminate();
         return -2;
     }
+
+	glfwSetInputMode(window,GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetCursorPosCallback(window, mouse_callback);
     //making shader
     Shader shader("shaders/vertexShader.glsl","shaders/fragmentShader.glsl");
 
@@ -256,6 +297,7 @@ int main(){
     glBindTexture(GL_TEXTURE_2D,texture);
     //glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
 	glEnable(GL_DEPTH_TEST);
+	
 
 	float currentFrame,lastFrame = 0.0f;
 
@@ -290,6 +332,7 @@ int main(){
 
         glBindVertexArray(VAO);
 
+
 		glm::mat4 view = glm::lookAt(cameraPos,cameraPos + cameraFront , cameraUp);
 		//view = glm::translate(view, glm::vec3(0.0f, sinf(glfwGetTime()) , -3.0f));
 
@@ -298,6 +341,7 @@ int main(){
 
 		glUniformMatrix4fv(glGetUniformLocation(shader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
 		glUniformMatrix4fv(glGetUniformLocation(shader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
 
 		for(unsigned int i = 0 ; i < 10;i++){			
 			glm::mat4 model = glm::mat4(1.0f);
