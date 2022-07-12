@@ -4,7 +4,11 @@
 #include <math.h>
 #include <iomanip>
 #include <chrono>
+#include "includes/glm/ext/matrix_float3x3.hpp"
+#include "includes/glm/ext/matrix_float4x4.hpp"
 #include "includes/glm/ext/matrix_transform.hpp"
+#include "includes/glm/ext/quaternion_geometric.hpp"
+#include "includes/glm/ext/vector_float3.hpp"
 #include "includes/glm/fwd.hpp"
 #include "includes/glm/geometric.hpp"
 #include "includes/glm/glm.hpp"
@@ -25,6 +29,7 @@ float pitch = 0.0f;
 float changer = 0.01f;
 float cameraSpeed = 2.5f;
 float deltaTime = 0.0f;
+float fov = 45.0f;
 bool firstMouseEnter = true;
 glm::vec3 cameraPos   = glm::vec3(0.0f,0.0f,3.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f,0.0f,-1.0f);
@@ -33,6 +38,13 @@ glm::vec3 cameraUp    = glm::vec3(0.0f,1.0f,0.0f);
 void framebuffer_size_callback(GLFWwindow* window, int width , int height){
     glViewport(0,0,width,height);
 }
+
+void scroll_callback(GLFWwindow* window , double xoffset , double yoffset){
+	fov -= (float)yoffset;
+	if (fov < 1.0f) fov = 1.0f;
+	if (fov > 45.0f) fov = 45.0f;
+}
+
 
 void mouse_callback(GLFWwindow* window, double xpos , double ypos){
 	if(firstMouseEnter){
@@ -69,17 +81,23 @@ void processInput(GLFWwindow* window){
     if (glfwGetKey(window,GLFW_KEY_ENTER) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
     
+	glm::mat3 transform = glm::mat3(
+			1.0f, 0.0f ,0.0f,
+			0.0f, 0.0f ,0.0f,
+			0.0f, 0.0f ,1.0f
+		);
+
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		cameraPos += deltaTime * cameraSpeed * cameraFront;	
+		cameraPos += deltaTime * cameraSpeed * (transform * cameraFront);	
 	
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		cameraPos -= deltaTime * cameraSpeed * cameraFront;	
+		cameraPos -= deltaTime * cameraSpeed * (transform * cameraFront);	
 	
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-		cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed * deltaTime;	
+		cameraPos -= glm::normalize(glm::cross((transform * cameraFront), cameraUp)) * cameraSpeed * deltaTime;	
 	
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed * deltaTime;
+		cameraPos += glm::normalize(glm::cross((transform * cameraFront), cameraUp)) * cameraSpeed * deltaTime;
 	
 
     if (glfwGetKey(window,GLFW_KEY_UP) == GLFW_PRESS){
@@ -92,6 +110,8 @@ void processInput(GLFWwindow* window){
         if (changer < 0.01) changer += 0.01f;
     }
 }
+
+
 
 
 std::ostream& operator<<(std::ostream& stream, glm::mat4 mat){
@@ -128,7 +148,25 @@ void CreateCircle(float verts[],int indicies[], int resolution, float radius){
     indicies[3*(resolution-1)+2] = 1;
 }
 
-int main(){
+
+glm::mat4 look_at(glm::vec3 position ,glm::vec3 target,glm::vec3 world_up){
+	glm::vec3 zaxis = glm::normalize(position - target);
+	glm::vec3 xaxis = glm::normalize(glm::cross(world_up, zaxis));
+	glm::vec3 yaxis = glm::cross(zaxis, xaxis);
+
+	glm::mat4 left = glm::transpose(glm::mat4(
+			glm::vec4(xaxis,0.0f),
+			glm::vec4(yaxis,0.0f),
+			glm::vec4(zaxis,0.0f),
+			glm::vec4(0.0f,0.0f,0.0f,1.0f))
+		);
+
+	glm::mat4 right = glm::translate(glm::mat4(1.0f), -position);
+	
+	return left * right;
+}
+
+int main(){ 
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR,3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR,3);
@@ -152,6 +190,7 @@ int main(){
 
 	glfwSetInputMode(window,GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
     //making shader
     Shader shader("shaders/vertexShader.glsl","shaders/fragmentShader.glsl");
 
@@ -333,11 +372,11 @@ int main(){
         glBindVertexArray(VAO);
 
 
-		glm::mat4 view = glm::lookAt(cameraPos,cameraPos + cameraFront , cameraUp);
+		glm::mat4 view = look_at(cameraPos,cameraPos + cameraFront , cameraUp);
 		//view = glm::translate(view, glm::vec3(0.0f, sinf(glfwGetTime()) , -3.0f));
 
 		glm::mat4 projection;
-		projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+		projection = glm::perspective(glm::radians(fov), 800.0f / 600.0f, 0.1f, 100.0f);
 
 		glUniformMatrix4fv(glGetUniformLocation(shader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
 		glUniformMatrix4fv(glGetUniformLocation(shader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
