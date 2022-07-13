@@ -45,13 +45,13 @@ public:
         glGetShaderiv(vertShader,GL_COMPILE_STATUS,&success);
         if (!success){
             glGetShaderInfoLog(vertShader,512,NULL,infoLog);
-            std::cout<<"ERRPR :: VERTEX::SHADER::GAY::"<<infoLog<<std::endl;
+            std::cout<<"ERRPR::VERTEX::SHADER:: "<<infoLog<<std::endl;
         }
         
         glGetShaderiv(fragShader,GL_COMPILE_STATUS,&success);
         if (!success){
             glGetShaderInfoLog(fragShader,512,NULL,infoLog);
-            std::cout<<"ERRPR :: FRAGMENT::SHADER::GAY::"<<infoLog<<std::endl;
+            std::cout<<"ERRPR::FRAGMENT::SHADER:: "<<infoLog<<std::endl;
         }
 
         ID = glCreateProgram();
@@ -62,7 +62,7 @@ public:
         glGetProgramiv(ID,GL_LINK_STATUS,&success);
         if (!success){
             glGetProgramInfoLog(ID,512,NULL,infoLog);
-            std::cout<<"ERRPR ::PROGRAM::LINK::GAY::"<<infoLog<<std::endl;
+            std::cout<<"ERRPR ::PROGRAM::LINK::"<<infoLog<<std::endl;
         }
 
     }
