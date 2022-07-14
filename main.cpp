@@ -1,8 +1,8 @@
 #include <glad/glad.h>
+#include <iomanip>
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <math.h>
-#include <iomanip>
 #include <chrono>
 #include "includes/glm/ext/matrix_float3x3.hpp"
 #include "includes/glm/ext/matrix_float4x4.hpp"
@@ -97,10 +97,15 @@ void processInput(GLFWwindow* window){
 	
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 		cameraPos += glm::normalize(glm::cross((transform * cameraFront), cameraUp)) * cameraSpeed * deltaTime;
+
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+		cameraPos.y += cameraSpeed * deltaTime;	
+	
+	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+		cameraPos.y -= cameraSpeed * deltaTime;	
+	
+
 }
-
-
-
 
 std::ostream& operator<<(std::ostream& stream, glm::mat4 mat){
 	stream << std::fixed << std::setprecision(2);
@@ -136,30 +141,6 @@ unsigned int load_texture(const char* texture_path){
     stbi_image_free(data);
 	return texture;
 }
-
-
-
-void CreateCircle(float verts[],int indicies[], int resolution, float radius){
-    float ang = 0;
-    float incr = (2*M_PI)/resolution;
-    verts[0] = verts[1] = verts [2] = 0.0f;
-    for (int i=1;i<resolution+1;i++){
-        verts[3*i] = radius*cosf(ang); if (abs(verts[3*i]) < 0.00001f) verts[3*i] = 0.0f; //rounding errors
-        verts[3*i+1] = radius*sinf(ang); if (abs(verts[3*i+1]) < 0.00001f) verts[3*i+1] = 0.0f;
-        verts[3*i+2] = 0.0f;
-        ang+=incr;
-    }
-    for(int i=0;i<resolution-1;i++){
-        indicies[3*i] = 0;
-        indicies[3*i+1] = i+1;
-        indicies[3*i+2] = i+2;
-    }
-
-    indicies[3*(resolution-1)] = 0;
-    indicies[3*(resolution-1)+1] = resolution;
-    indicies[3*(resolution-1)+2] = 1;
-}
-
 
 glm::mat4 look_at(glm::vec3 position ,glm::vec3 target,glm::vec3 world_up){
 	glm::vec3 zaxis = glm::normalize(position - target);
@@ -217,51 +198,51 @@ int main(){
 
 
     //making buffers
-	float verts[] = { //cube
-		// positions			   
-		-0.5f, -0.5f, -0.5f,
-		 0.5f, -0.5f, -0.5f,
-		 0.5f,  0.5f, -0.5f,
-		 0.5f,  0.5f, -0.5f,
-		-0.5f,  0.5f, -0.5f,
-		-0.5f, -0.5f, -0.5f,
 
-		-0.5f, -0.5f,  0.5f,
-		 0.5f, -0.5f,  0.5f,
-		 0.5f,  0.5f,  0.5f,
-		 0.5f,  0.5f,  0.5f,
-		-0.5f,  0.5f,  0.5f,
-		-0.5f, -0.5f,  0.5f,
+	float verts[] = {
+		//position              normalVector
+		-0.5f, -0.5f, -0.5f,    0.0f,  0.0f, -1.0f,
+    	 0.5f, -0.5f, -0.5f,    0.0f,  0.0f, -1.0f, 
+    	 0.5f,  0.5f, -0.5f,    0.0f,  0.0f, -1.0f, 
+    	 0.5f,  0.5f, -0.5f,    0.0f,  0.0f, -1.0f, 
+    	-0.5f,  0.5f, -0.5f,    0.0f,  0.0f, -1.0f, 
+    	-0.5f, -0.5f, -0.5f,    0.0f,  0.0f, -1.0f, 
 
-		-0.5f,  0.5f,  0.5f,
-		-0.5f,  0.5f, -0.5f,
-		-0.5f, -0.5f, -0.5f,
-		-0.5f, -0.5f, -0.5f,
-		-0.5f, -0.5f,  0.5f,
-		-0.5f,  0.5f,  0.5f,
+    	-0.5f, -0.5f,  0.5f,    0.0f,  0.0f, 1.0f,
+    	 0.5f, -0.5f,  0.5f,    0.0f,  0.0f, 1.0f,
+    	 0.5f,  0.5f,  0.5f,    0.0f,  0.0f, 1.0f,
+    	 0.5f,  0.5f,  0.5f,    0.0f,  0.0f, 1.0f,
+    	-0.5f,  0.5f,  0.5f,    0.0f,  0.0f, 1.0f,
+    	-0.5f, -0.5f,  0.5f,    0.0f,  0.0f, 1.0f,
 
-		 0.5f,  0.5f,  0.5f,
-		 0.5f,  0.5f, -0.5f,
-		 0.5f, -0.5f, -0.5f,
-		 0.5f, -0.5f, -0.5f,
-		 0.5f, -0.5f,  0.5f,
-		 0.5f,  0.5f,  0.5f,
+    	-0.5f,  0.5f,  0.5f,   -1.0f,  0.0f,  0.0f,
+    	-0.5f,  0.5f, -0.5f,   -1.0f,  0.0f,  0.0f,
+    	-0.5f, -0.5f, -0.5f,   -1.0f,  0.0f,  0.0f,
+    	-0.5f, -0.5f, -0.5f,   -1.0f,  0.0f,  0.0f,
+    	-0.5f, -0.5f,  0.5f,   -1.0f,  0.0f,  0.0f,
+    	-0.5f,  0.5f,  0.5f,   -1.0f,  0.0f,  0.0f,
 
-		-0.5f, -0.5f, -0.5f,
-		 0.5f, -0.5f, -0.5f,
-		 0.5f, -0.5f,  0.5f,
-		 0.5f, -0.5f,  0.5f,
-		-0.5f, -0.5f,  0.5f,
-		-0.5f, -0.5f, -0.5f,
+    	 0.5f,  0.5f,  0.5f,    1.0f,  0.0f,  0.0f,
+    	 0.5f,  0.5f, -0.5f,    1.0f,  0.0f,  0.0f,
+    	 0.5f, -0.5f, -0.5f,    1.0f,  0.0f,  0.0f,
+    	 0.5f, -0.5f, -0.5f,    1.0f,  0.0f,  0.0f,
+    	 0.5f, -0.5f,  0.5f,    1.0f,  0.0f,  0.0f,
+    	 0.5f,  0.5f,  0.5f,    1.0f,  0.0f,  0.0f,
 
-		-0.5f,  0.5f, -0.5f,
-		 0.5f,  0.5f, -0.5f,
-		 0.5f,  0.5f,  0.5f,
-		 0.5f,  0.5f,  0.5f,
-		-0.5f,  0.5f,  0.5f,
-		-0.5f,  0.5f, -0.5f
+    	-0.5f, -0.5f, -0.5f,    0.0f, -1.0f,  0.0f,
+    	 0.5f, -0.5f, -0.5f,    0.0f, -1.0f,  0.0f,
+    	 0.5f, -0.5f,  0.5f,    0.0f, -1.0f,  0.0f,
+    	 0.5f, -0.5f,  0.5f,    0.0f, -1.0f,  0.0f,
+    	-0.5f, -0.5f,  0.5f,    0.0f, -1.0f,  0.0f,
+    	-0.5f, -0.5f, -0.5f,    0.0f, -1.0f,  0.0f,
+
+    	-0.5f,  0.5f, -0.5f,    0.0f,  1.0f,  0.0f,
+    	 0.5f,  0.5f, -0.5f,    0.0f,  1.0f,  0.0f,
+    	 0.5f,  0.5f,  0.5f,    0.0f,  1.0f,  0.0f,
+    	 0.5f,  0.5f,  0.5f,    0.0f,  1.0f,  0.0f,
+    	-0.5f,  0.5f,  0.5f,    0.0f,  1.0f,  0.0f,
+    	-0.5f,  0.5f, -0.5f,    0.0f,  1.0f,  0.0f
 	};
-
 
     unsigned int VBO,VAO,lightVAO;
     glGenVertexArrays(1,&VAO);
@@ -275,20 +256,23 @@ int main(){
     //vertex attrib pointers .....
     
     //coords
-    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,3*sizeof(float),(void*)0);
+    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,6*sizeof(float),(void*)0);
     glEnableVertexAttribArray(0);
 
+    glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,6*sizeof(float),(void*)(3 * sizeof(float)) );
+    glEnableVertexAttribArray(1);
 
     glGenVertexArrays(1,&lightVAO);
     glBindVertexArray(lightVAO);
     glBindBuffer(GL_ARRAY_BUFFER,VBO);
 
-	glVertexAttribPointer(0 , 3 ,GL_FLOAT , GL_FALSE , 3 * sizeof(float) , (void *) 0);
+	glVertexAttribPointer(0 , 3 ,GL_FLOAT , GL_FALSE , 6 * sizeof(float) , (void *) 0);
     glEnableVertexAttribArray(0);
 
 
 	glm::vec3 cubePos(0.0f , 0.0f ,0.0f);
 	glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+
 
     //glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
 	
@@ -308,9 +292,13 @@ int main(){
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
+		lightPos = glm::vec3( 3 * cosf(glfwGetTime()) , lightPos.y , 3 * sinf(glfwGetTime()) );
+
 		shader.use();
 		shader.setVec3Uniform("objectColor", 1.0f, 0.5f, 0.31f);
 		shader.setVec3Uniform("lightColor", 1.0f, 1.0f, 1.0f);
+		shader.setVec3Uniform("lightPos", lightPos.x,lightPos.y ,lightPos.z);
+		shader.setVec3Uniform("viewPos", cameraPos.x, cameraPos.y, cameraPos.z);
 
 		glm::mat4 model = glm::translate(glm::mat4(1.0f), cubePos);
 		glm::mat4 view = look_at(cameraPos,cameraPos + cameraFront , cameraUp);
