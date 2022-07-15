@@ -292,13 +292,29 @@ int main(){
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
-		lightPos = glm::vec3( 3 * cosf(glfwGetTime()) , lightPos.y , 3 * sinf(glfwGetTime()) );
+		//lightPos = glm::vec3( 3 * cosf(glfwGetTime()) , lightPos.y , 3 * sinf(glfwGetTime()) );
 
 		shader.use();
-		shader.setVec3Uniform("objectColor", 1.0f, 0.5f, 0.31f);
-		shader.setVec3Uniform("lightColor", 1.0f, 1.0f, 1.0f);
-		shader.setVec3Uniform("lightPos", lightPos.x,lightPos.y ,lightPos.z);
 		shader.setVec3Uniform("viewPos", cameraPos.x, cameraPos.y, cameraPos.z);
+
+		glm::vec3 lightColor = glm::vec3(1.0f);
+		  
+		shader.setVec3Uniform("light.position", lightPos.x,lightPos.y ,lightPos.z);
+		//shader.setVec3Uniform("light.ambient",  ambientColor.x, ambientColor.y, ambientColor.z);
+		//shader.setVec3Uniform("light.diffuse",  diffuseColor.x, diffuseColor.y, diffuseColor.z);
+		shader.setVec3Uniform("light.ambient", 1.0f, 1.0f, 1.0f);
+		shader.setVec3Uniform("light.diffuse", 1.0f, 1.0f, 1.0f);
+		shader.setVec3Uniform("light.specular", 1.0f, 1.0f, 1.0f);
+
+		//shader.setVec3Uniform("material.ambient", 0.1f, 0.3f, 0.3f);
+		//shader.setVec3Uniform("material.diffuse", 0.2f, 1.0f, 1.0f);
+		//shader.setVec3Uniform("material.specular", 0.5f, 0.5f, 0.5f);
+
+		shader.setVec3Uniform("material.ambient", 0.0f, 0.1f, 0.06f);
+        shader.setVec3Uniform("material.diffuse", 0.0f, 0.50980392f, 0.50980392f);
+        shader.setVec3Uniform("material.specular", 0.50196078f, 0.50196078f, 0.50196078f);
+
+		glUniform1f(glGetUniformLocation(shader.ID,"material.shininess"),32.0f);
 
 		glm::mat4 model = glm::translate(glm::mat4(1.0f), cubePos);
 		glm::mat4 view = look_at(cameraPos,cameraPos + cameraFront , cameraUp);
@@ -318,6 +334,7 @@ int main(){
 		model = glm::translate(model, lightPos);
 		model = glm::scale(model, glm::vec3(0.2f)); 
 
+		lightShader.setVec3Uniform("lightColor",  lightColor.x, lightColor.y, lightColor.z);
 		glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
 		glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
 		glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
