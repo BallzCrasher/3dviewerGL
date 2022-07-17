@@ -16,6 +16,7 @@
 #include "includes/glm/gtc/type_ptr.hpp"
 #include "includes/Shader.h"
 #include "includes/glm/matrix.hpp"
+#include "includes/glm/trigonometric.hpp"
 #define STB_IMAGE_IMPLEMENTATION
 #include "includes/stb_image.h"
 
@@ -295,10 +296,8 @@ int main(){
 
 
 	//glm::vec3 cubePos(0.0f , 0.0f ,0.0f);
-	glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+	//glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
-	glUniform1i(glGetUniformLocation(shader.ID,"material.diffuse") ,0);
-	glUniform1i(glGetUniformLocation(shader.ID,"material.specular"),1);
 
     //glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
 
@@ -321,23 +320,30 @@ int main(){
 		glm::vec3 lightColor = glm::vec3(1.0f);
 
 		shader.use();
+
+		//flashlight
 		shader.setVec3Uniform("viewPos", cameraPos.x, cameraPos.y, cameraPos.z); 
-		shader.setVec3Uniform("light.position", lightPos.x,lightPos.y ,lightPos.z);	
-		//shader.setVec3Uniform("light.direction", -0.2f, -1.0f, -0.3f);
+		shader.setVec3Uniform("light.position", cameraPos.x, cameraPos.y, cameraPos.z); 
+		shader.setVec3Uniform("light.direction", cameraFront.x, cameraFront.y, cameraFront.z);
+		glUniform1f(glGetUniformLocation(shader.ID,"light.cutoff"),glm::cos(glm::radians(12.5f)));
 		
+		//light propreties
 		shader.setVec3Uniform("light.ambient", 0.2f, 0.2f, 0.2f);
         shader.setVec3Uniform("light.diffuse", 0.5f, 0.5f, 0.5f);
         shader.setVec3Uniform("light.specular", 1.0f, 1.0f, 1.0f);
-
 		glUniform1f(glGetUniformLocation(shader.ID,"light.constant") ,1.0f);
 		glUniform1f(glGetUniformLocation(shader.ID,"light.linear")   ,0.09f);
 		glUniform1f(glGetUniformLocation(shader.ID,"light.quadratic"),0.0032f);
 
+		
+		//material propreties
+		glUniform1i(glGetUniformLocation(shader.ID,"material.diffuse") ,0);
+		glUniform1i(glGetUniformLocation(shader.ID,"material.specular"),1);
+		glUniform1f(glGetUniformLocation(shader.ID,"material.shininess"),32.0f);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, diffuseMap);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, specularMap);
-		glUniform1f(glGetUniformLocation(shader.ID,"material.shininess"),32.0f);
 
 		glm::mat4 view = look_at(cameraPos,cameraPos + cameraFront , cameraUp);
 		glm::mat4 projection = glm::perspective(glm::radians(fov), 800.0f / 600.0f, 0.1f, 100.0f);
@@ -355,19 +361,19 @@ int main(){
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
 
-		lightShader.use();
-        
-		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, lightPos);
-		model = glm::scale(model, glm::vec3(0.2f)); 
-        
-		lightShader.setVec3Uniform("lightColor",  lightColor.x, lightColor.y, lightColor.z);
-		glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
-		glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
-		glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-        
-        glBindVertexArray(lightVAO);
-		glDrawArrays(GL_TRIANGLES,0,36);
+		//lightShader.use();
+        //
+		//glm::mat4 model = glm::mat4(1.0f);
+		//model = glm::translate(model, lightPos);
+		//model = glm::scale(model, glm::vec3(0.2f)); 
+        //
+		//lightShader.setVec3Uniform("lightColor",  lightColor.x, lightColor.y, lightColor.z);
+		//glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+		//glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
+		//glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+        //
+        //glBindVertexArray(lightVAO);
+		//glDrawArrays(GL_TRIANGLES,0,36);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
