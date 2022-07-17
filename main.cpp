@@ -326,6 +326,7 @@ int main(){
 		shader.setVec3Uniform("light.position", cameraPos.x, cameraPos.y, cameraPos.z); 
 		shader.setVec3Uniform("light.direction", cameraFront.x, cameraFront.y, cameraFront.z);
 		glUniform1f(glGetUniformLocation(shader.ID,"light.cutoff"),glm::cos(glm::radians(12.5f)));
+		glUniform1f(glGetUniformLocation(shader.ID,"light.outerCutoff"),glm::cos(glm::radians(17.5f)));
 		
 		//light propreties
 		shader.setVec3Uniform("light.ambient", 0.2f, 0.2f, 0.2f);
