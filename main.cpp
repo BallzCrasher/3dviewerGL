@@ -122,25 +122,26 @@ unsigned int load_texture(const char* texture_path){
     unsigned int texture;
     glGenTextures(1,&texture);
     glBindTexture(GL_TEXTURE_2D,texture);
-
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_MIRRORED_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_MIRRORED_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-
     int x,y,nrChannel;
     unsigned char* data = stbi_load(texture_path,&x,&y,&nrChannel,0);
     if (data){
-        glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,x,y,0,GL_RGB,GL_UNSIGNED_BYTE,data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }
+		GLenum format;
+			if (nrChannel == 1)
+				format = GL_RED;
+			else if (nrChannel == 3)
+				format = GL_RGB;
+			else if (nrChannel == 4)
+				format = GL_RGBA;
 
-    else {
+        glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,x,y,0,format,GL_UNSIGNED_BYTE,data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    } else {
         std::cout<<"FAILED TO LOAD IMAGE!"<<std::endl;
     }
     stbi_image_free(data);
 	return texture;
 }
+
 
 glm::mat4 look_at(glm::vec3 position ,glm::vec3 target,glm::vec3 world_up){
 	glm::vec3 zaxis = glm::normalize(position - target);
@@ -167,7 +168,7 @@ int main(){
 
     GLFWwindow* window = glfwCreateWindow(WIDTH,HIEGHT,"OpenGL Window",NULL,NULL);
     if (window == NULL){
-        std::cout<<"ERROR :: GLFWWindow not created !! "<<'\n';
+        std::cout<<"ERROR :: GLFWWindow not created !!"<<'\n';
         glfwTerminate();
         return -1;
     }
@@ -194,54 +195,71 @@ int main(){
 
     //TEXTURES 
 	
-	//stbi_set_flip_vertically_on_load(true);
-
+	stbi_set_flip_vertically_on_load(true);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_MIRRORED_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_MIRRORED_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+	unsigned int diffuseMap = load_texture("./images/container2.png");
+	unsigned int specularMap = load_texture("./images/container2_specular.png");
 
     //making buffers
-
 	float verts[] = {
-		//position              normalVector
-		-0.5f, -0.5f, -0.5f,    0.0f,  0.0f, -1.0f,
-    	 0.5f, -0.5f, -0.5f,    0.0f,  0.0f, -1.0f, 
-    	 0.5f,  0.5f, -0.5f,    0.0f,  0.0f, -1.0f, 
-    	 0.5f,  0.5f, -0.5f,    0.0f,  0.0f, -1.0f, 
-    	-0.5f,  0.5f, -0.5f,    0.0f,  0.0f, -1.0f, 
-    	-0.5f, -0.5f, -0.5f,    0.0f,  0.0f, -1.0f, 
+		// positions          // normals           // texture coords
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
 
-    	-0.5f, -0.5f,  0.5f,    0.0f,  0.0f, 1.0f,
-    	 0.5f, -0.5f,  0.5f,    0.0f,  0.0f, 1.0f,
-    	 0.5f,  0.5f,  0.5f,    0.0f,  0.0f, 1.0f,
-    	 0.5f,  0.5f,  0.5f,    0.0f,  0.0f, 1.0f,
-    	-0.5f,  0.5f,  0.5f,    0.0f,  0.0f, 1.0f,
-    	-0.5f, -0.5f,  0.5f,    0.0f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
 
-    	-0.5f,  0.5f,  0.5f,   -1.0f,  0.0f,  0.0f,
-    	-0.5f,  0.5f, -0.5f,   -1.0f,  0.0f,  0.0f,
-    	-0.5f, -0.5f, -0.5f,   -1.0f,  0.0f,  0.0f,
-    	-0.5f, -0.5f, -0.5f,   -1.0f,  0.0f,  0.0f,
-    	-0.5f, -0.5f,  0.5f,   -1.0f,  0.0f,  0.0f,
-    	-0.5f,  0.5f,  0.5f,   -1.0f,  0.0f,  0.0f,
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
 
-    	 0.5f,  0.5f,  0.5f,    1.0f,  0.0f,  0.0f,
-    	 0.5f,  0.5f, -0.5f,    1.0f,  0.0f,  0.0f,
-    	 0.5f, -0.5f, -0.5f,    1.0f,  0.0f,  0.0f,
-    	 0.5f, -0.5f, -0.5f,    1.0f,  0.0f,  0.0f,
-    	 0.5f, -0.5f,  0.5f,    1.0f,  0.0f,  0.0f,
-    	 0.5f,  0.5f,  0.5f,    1.0f,  0.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
 
-    	-0.5f, -0.5f, -0.5f,    0.0f, -1.0f,  0.0f,
-    	 0.5f, -0.5f, -0.5f,    0.0f, -1.0f,  0.0f,
-    	 0.5f, -0.5f,  0.5f,    0.0f, -1.0f,  0.0f,
-    	 0.5f, -0.5f,  0.5f,    0.0f, -1.0f,  0.0f,
-    	-0.5f, -0.5f,  0.5f,    0.0f, -1.0f,  0.0f,
-    	-0.5f, -0.5f, -0.5f,    0.0f, -1.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
 
-    	-0.5f,  0.5f, -0.5f,    0.0f,  1.0f,  0.0f,
-    	 0.5f,  0.5f, -0.5f,    0.0f,  1.0f,  0.0f,
-    	 0.5f,  0.5f,  0.5f,    0.0f,  1.0f,  0.0f,
-    	 0.5f,  0.5f,  0.5f,    0.0f,  1.0f,  0.0f,
-    	-0.5f,  0.5f,  0.5f,    0.0f,  1.0f,  0.0f,
-    	-0.5f,  0.5f, -0.5f,    0.0f,  1.0f,  0.0f
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
+	};
+	
+	glm::vec3 cubePositions[] = {
+		glm::vec3( 0.0f,  0.0f,  0.0f),
+		glm::vec3( 2.0f,  5.0f, -15.0f),
+		glm::vec3(-1.5f, -2.2f, -2.5f),
+		glm::vec3(-3.8f, -2.0f, -12.3f),
+		glm::vec3( 2.4f, -0.4f, -3.5f),
+		glm::vec3(-1.7f,  3.0f, -7.5f),
+		glm::vec3( 1.3f, -2.0f, -2.5f),
+		glm::vec3( 1.5f,  2.0f, -2.5f),
+		glm::vec3( 1.5f,  0.2f, -1.5f),
+		glm::vec3(-1.3f,  1.0f, -1.5f)
 	};
 
     unsigned int VBO,VAO,lightVAO;
@@ -255,31 +273,37 @@ int main(){
 
     //vertex attrib pointers .....
     
-    //coords
-    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,6*sizeof(float),(void*)0);
+	//position
+    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,8*sizeof(float),(void*)0);
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,6*sizeof(float),(void*)(3 * sizeof(float)) );
+	//normal
+    glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,8*sizeof(float),(void*)(3 * sizeof(float)) );
     glEnableVertexAttribArray(1);
 
+	//texture coords	
+    glVertexAttribPointer(2,2,GL_FLOAT,GL_FALSE,8*sizeof(float),(void*)(6 * sizeof(float)) );
+    glEnableVertexAttribArray(2);
+
+	//light cube pointers .....
     glGenVertexArrays(1,&lightVAO);
     glBindVertexArray(lightVAO);
     glBindBuffer(GL_ARRAY_BUFFER,VBO);
 
-	glVertexAttribPointer(0 , 3 ,GL_FLOAT , GL_FALSE , 6 * sizeof(float) , (void *) 0);
+	glVertexAttribPointer(0 , 3 ,GL_FLOAT , GL_FALSE , 8 * sizeof(float) , (void *) 0);
     glEnableVertexAttribArray(0);
 
 
-	glm::vec3 cubePos(0.0f , 0.0f ,0.0f);
+	//glm::vec3 cubePos(0.0f , 0.0f ,0.0f);
 	glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
+	glUniform1i(glGetUniformLocation(shader.ID,"material.diffuse") ,0);
+	glUniform1i(glGetUniformLocation(shader.ID,"material.specular"),1);
 
     //glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
-	
 
 	float currentFrame,lastFrame = 0.0f;
 
-	std::cout << "Running" << std::endl;
     while (!glfwWindowShouldClose(window))
     {
         processInput(window);
@@ -294,51 +318,54 @@ int main(){
 
 		//lightPos = glm::vec3( 3 * cosf(glfwGetTime()) , lightPos.y , 3 * sinf(glfwGetTime()) );
 
-		shader.use();
-		shader.setVec3Uniform("viewPos", cameraPos.x, cameraPos.y, cameraPos.z);
-
 		glm::vec3 lightColor = glm::vec3(1.0f);
-		  
-		shader.setVec3Uniform("light.position", lightPos.x,lightPos.y ,lightPos.z);
-		//shader.setVec3Uniform("light.ambient",  ambientColor.x, ambientColor.y, ambientColor.z);
-		//shader.setVec3Uniform("light.diffuse",  diffuseColor.x, diffuseColor.y, diffuseColor.z);
-		shader.setVec3Uniform("light.ambient", 1.0f, 1.0f, 1.0f);
-		shader.setVec3Uniform("light.diffuse", 1.0f, 1.0f, 1.0f);
-		shader.setVec3Uniform("light.specular", 1.0f, 1.0f, 1.0f);
 
-		//shader.setVec3Uniform("material.ambient", 0.1f, 0.3f, 0.3f);
-		//shader.setVec3Uniform("material.diffuse", 0.2f, 1.0f, 1.0f);
-		//shader.setVec3Uniform("material.specular", 0.5f, 0.5f, 0.5f);
+		shader.use();
+		shader.setVec3Uniform("viewPos", cameraPos.x, cameraPos.y, cameraPos.z); 
+		shader.setVec3Uniform("light.position", lightPos.x,lightPos.y ,lightPos.z);	
+		//shader.setVec3Uniform("light.direction", -0.2f, -1.0f, -0.3f);
+		
+		shader.setVec3Uniform("light.ambient", 0.2f, 0.2f, 0.2f);
+        shader.setVec3Uniform("light.diffuse", 0.5f, 0.5f, 0.5f);
+        shader.setVec3Uniform("light.specular", 1.0f, 1.0f, 1.0f);
 
-		shader.setVec3Uniform("material.ambient", 0.0f, 0.1f, 0.06f);
-        shader.setVec3Uniform("material.diffuse", 0.0f, 0.50980392f, 0.50980392f);
-        shader.setVec3Uniform("material.specular", 0.50196078f, 0.50196078f, 0.50196078f);
+		glUniform1f(glGetUniformLocation(shader.ID,"light.constant") ,1.0f);
+		glUniform1f(glGetUniformLocation(shader.ID,"light.linear")   ,0.09f);
+		glUniform1f(glGetUniformLocation(shader.ID,"light.quadratic"),0.0032f);
 
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, diffuseMap);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, specularMap);
 		glUniform1f(glGetUniformLocation(shader.ID,"material.shininess"),32.0f);
 
-		glm::mat4 model = glm::translate(glm::mat4(1.0f), cubePos);
 		glm::mat4 view = look_at(cameraPos,cameraPos + cameraFront , cameraUp);
 		glm::mat4 projection = glm::perspective(glm::radians(fov), 800.0f / 600.0f, 0.1f, 100.0f);
 
-		glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
 		glUniformMatrix4fv(glGetUniformLocation(shader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
 		glUniformMatrix4fv(glGetUniformLocation(shader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-
         glBindVertexArray(VAO);
-		glDrawArrays(GL_TRIANGLES,0,36);
+		for(unsigned int i = 0; i < 10; i++){
+			glm::mat4 model = glm::mat4(1.0f);
+			model = glm::translate(model, cubePositions[i]);
+			float angle = 20.0f * i;
+			model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 
+			glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
 
 		lightShader.use();
-
-		model = glm::mat4(1.0f);
+        
+		glm::mat4 model = glm::mat4(1.0f);
 		model = glm::translate(model, lightPos);
 		model = glm::scale(model, glm::vec3(0.2f)); 
-
+        
 		lightShader.setVec3Uniform("lightColor",  lightColor.x, lightColor.y, lightColor.z);
 		glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
 		glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
 		glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-
+        
         glBindVertexArray(lightVAO);
 		glDrawArrays(GL_TRIANGLES,0,36);
 
