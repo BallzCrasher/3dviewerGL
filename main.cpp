@@ -4,6 +4,7 @@
 #include <iostream>
 #include <math.h>
 #include <chrono>
+#include <string>
 #include "includes/glm/ext/matrix_float3x3.hpp"
 #include "includes/glm/ext/matrix_float4x4.hpp"
 #include "includes/glm/ext/matrix_transform.hpp"
@@ -298,6 +299,13 @@ int main(){
 	//glm::vec3 cubePos(0.0f , 0.0f ,0.0f);
 	//glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
+	glm::vec3 pointLightPositions[] = {
+		glm::vec3( 0.7f,  0.2f,  2.0f),
+		glm::vec3( 2.3f, -3.3f, -4.0f),
+		glm::vec3(-4.0f,  2.0f, -12.0f),
+		glm::vec3( 0.0f,  0.0f, -3.0f)
+	};  
+
 
     //glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
 
@@ -320,23 +328,63 @@ int main(){
 		glm::vec3 lightColor = glm::vec3(1.0f);
 
 		shader.use();
+		shader.setVec3Uniform("viewPos", cameraPos.x, cameraPos.y, cameraPos.z); 
 
 		//flashlight
-		shader.setVec3Uniform("viewPos", cameraPos.x, cameraPos.y, cameraPos.z); 
-		shader.setVec3Uniform("light.position", cameraPos.x, cameraPos.y, cameraPos.z); 
-		shader.setVec3Uniform("light.direction", cameraFront.x, cameraFront.y, cameraFront.z);
-		glUniform1f(glGetUniformLocation(shader.ID,"light.cutoff"),glm::cos(glm::radians(12.5f)));
-		glUniform1f(glGetUniformLocation(shader.ID,"light.outerCutoff"),glm::cos(glm::radians(17.5f)));
-		
-		//light propreties
-		shader.setVec3Uniform("light.ambient", 0.2f, 0.2f, 0.2f);
-        shader.setVec3Uniform("light.diffuse", 0.5f, 0.5f, 0.5f);
-        shader.setVec3Uniform("light.specular", 1.0f, 1.0f, 1.0f);
-		glUniform1f(glGetUniformLocation(shader.ID,"light.constant") ,1.0f);
-		glUniform1f(glGetUniformLocation(shader.ID,"light.linear")   ,0.09f);
-		glUniform1f(glGetUniformLocation(shader.ID,"light.quadratic"),0.0032f);
+		shader.setVec3Uniform("spotLight.position", cameraPos.x, cameraPos.y, cameraPos.z); 
+		shader.setVec3Uniform("spotLight.direction", cameraFront.x, cameraFront.y, cameraFront.z);
+		glUniform1f(glGetUniformLocation(shader.ID,"spotLight.cutoff"),glm::cos(glm::radians(12.5f)));
+		glUniform1f(glGetUniformLocation(shader.ID,"spotLight.outerCutoff"),glm::cos(glm::radians(17.5f)));	 
+		shader.setVec3Uniform("spotLight.ambient", 0.2f, 0.2f, 0.2f); //flashLight propreties
+        shader.setVec3Uniform("spotLight.diffuse", 0.5f, 0.5f, 0.5f);
+        shader.setVec3Uniform("spotLight.specular", 1.0f, 1.0f, 1.0f);
+		glUniform1f(glGetUniformLocation(shader.ID,"spotLight.constant") ,1.0f);
+		glUniform1f(glGetUniformLocation(shader.ID,"spotLight.linear")   ,0.09f);
+		glUniform1f(glGetUniformLocation(shader.ID,"spotLight.quadratic"),0.0032f);
 
-		
+		//Directional Light
+		shader.setVec3Uniform("dirLight.direction", -0.2f, -1.0f, -0.3f);
+        shader.setVec3Uniform("dirLight.ambient", 0.05f, 0.05f, 0.05f);
+        shader.setVec3Uniform("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
+        shader.setVec3Uniform("dirLight.specular", 0.5f, 0.5f, 0.5f);
+
+		//Point Lights	
+		glUniform1f(glGetUniformLocation(shader.ID,"pointLights[0].linear")   ,0.09f);	
+		shader.setVec3Uniform("pointLights[0].position", pointLightPositions[0].x, pointLightPositions[0].y, pointLightPositions[0].z);
+		shader.setVec3Uniform("pointLights[0].ambient", 0.05, 0.05, 0.05); 
+        shader.setVec3Uniform("pointLights[0].diffuse", 0.5f, 0.5f, 0.5f);
+        shader.setVec3Uniform("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
+		glUniform1f(glGetUniformLocation(shader.ID,"pointLights[0].constant") ,1.0f);
+		glUniform1f(glGetUniformLocation(shader.ID,"pointLights[0].linear")   ,0.09f);
+		glUniform1f(glGetUniformLocation(shader.ID,"pointLights[0].quadratic"),0.032f);
+
+		glUniform1f(glGetUniformLocation(shader.ID,"pointLights[1].linear")   ,0.09f);	
+		shader.setVec3Uniform("pointLights[1].position", pointLightPositions[1].x, pointLightPositions[1].y, pointLightPositions[1].z);
+		shader.setVec3Uniform("pointLights[1].ambient", 0.05, 0.05, 0.05); 
+        shader.setVec3Uniform("pointLights[1].diffuse", 0.5f, 0.5f, 0.5f);
+        shader.setVec3Uniform("pointLights[1].specular", 1.0f, 1.0f, 1.0f);
+		glUniform1f(glGetUniformLocation(shader.ID,"pointLights[1].constant") ,1.0f);
+		glUniform1f(glGetUniformLocation(shader.ID,"pointLights[1].linear")   ,0.09f);
+		glUniform1f(glGetUniformLocation(shader.ID,"pointLights[1].quadratic"),0.032f);
+
+		glUniform1f(glGetUniformLocation(shader.ID,"pointLights[2].linear")   ,0.09f);	
+		shader.setVec3Uniform("pointLights[2].position", pointLightPositions[2].x, pointLightPositions[2].y, pointLightPositions[2].z);
+		shader.setVec3Uniform("pointLights[2].ambient", 0.05, 0.05, 0.05); 
+        shader.setVec3Uniform("pointLights[2].diffuse", 0.5f, 0.5f, 0.5f);
+        shader.setVec3Uniform("pointLights[2].specular", 1.0f, 1.0f, 1.0f);
+		glUniform1f(glGetUniformLocation(shader.ID,"pointLights[2].constant") ,1.0f);
+		glUniform1f(glGetUniformLocation(shader.ID,"pointLights[2].linear")   ,0.09f);
+		glUniform1f(glGetUniformLocation(shader.ID,"pointLights[2].quadratic"),0.032);
+
+		glUniform1f(glGetUniformLocation(shader.ID,"pointLights[3].linear")   ,0.09f);	
+		shader.setVec3Uniform("pointLights[3].position", pointLightPositions[3].x, pointLightPositions[3].y, pointLightPositions[3].z);
+		shader.setVec3Uniform("pointLights[3].ambient", 0.05, 0.05, 0.05); 
+        shader.setVec3Uniform("pointLights[3].diffuse", 0.5f, 0.5f, 0.5f);
+        shader.setVec3Uniform("pointLights[3].specular", 1.0f, 1.0f, 1.0f);
+		glUniform1f(glGetUniformLocation(shader.ID,"pointLights[3].constant") ,1.0f);
+		glUniform1f(glGetUniformLocation(shader.ID,"pointLights[3].linear")   ,0.09f);
+		glUniform1f(glGetUniformLocation(shader.ID,"pointLights[3].quadratic"),0.032f);
+
 		//material propreties
 		glUniform1i(glGetUniformLocation(shader.ID,"material.diffuse") ,0);
 		glUniform1i(glGetUniformLocation(shader.ID,"material.specular"),1);
@@ -362,19 +410,22 @@ int main(){
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
 
-		//lightShader.use();
-        //
-		//glm::mat4 model = glm::mat4(1.0f);
-		//model = glm::translate(model, lightPos);
-		//model = glm::scale(model, glm::vec3(0.2f)); 
-        //
-		//lightShader.setVec3Uniform("lightColor",  lightColor.x, lightColor.y, lightColor.z);
-		//glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
-		//glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
-		//glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-        //
-        //glBindVertexArray(lightVAO);
-		//glDrawArrays(GL_TRIANGLES,0,36);
+		lightShader.use();
+        
+		lightShader.setVec3Uniform("lightColor",  lightColor.x, lightColor.y, lightColor.z);
+		glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+		for(unsigned int i = 0; i < 4; i++){
+			glm::mat4 model = glm::mat4(1.0f);
+			model = glm::translate(model, pointLightPositions[i]);
+			model = glm::scale(model, glm::vec3(0.2f)); 
+
+			glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
+         
+        glBindVertexArray(lightVAO);
+		glDrawArrays(GL_TRIANGLES,0,36);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
