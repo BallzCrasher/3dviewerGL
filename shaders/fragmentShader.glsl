@@ -101,16 +101,15 @@ vec3 calcSpotLight(spot_light light, vec3 normal, vec3 fragPos, vec3 viewDir){
 	vec3 diffuse  = light.diffuse  * diff * vec3(texture(material.diffuse, TexCoords));
 	vec3 specular = light.specular * spec * vec3(texture(material.specular,TexCoords));
 
-	ambient  *= attenuation;
-	diffuse  *= attenuation;
-	specular *= attenuation;
 
 	float theta     = dot(lightDir, normalize(-light.direction));
 	float epsilon   = light.cutoff - light.outerCutoff;
 	float intensity = clamp((theta - light.outerCutoff) / epsilon, 0.0, 1.0);
     
-	diffuse  *= intensity;
-	
+	ambient  *= attenuation * intensity;
+	diffuse  *= attenuation * intensity;
+	specular *= attenuation * intensity;
+		
 	if( theta < light.outerCutoff )
 		return ambient;
 

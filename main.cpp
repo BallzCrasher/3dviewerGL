@@ -35,6 +35,7 @@ bool firstMouseEnter = true;
 glm::vec3 cameraPos   = glm::vec3(0.0f,0.0f,3.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f,0.0f,-1.0f);
 glm::vec3 cameraUp    = glm::vec3(0.0f,1.0f,0.0f);
+bool flashLight_switch = true;
 
 void framebuffer_size_callback(GLFWwindow* window, int width , int height){
     glViewport(0,0,width,height);
@@ -82,7 +83,7 @@ void processInput(GLFWwindow* window){
     if (glfwGetKey(window,GLFW_KEY_ENTER) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
     
-	static glm::mat3 transform = glm::mat3(
+	static const glm::mat3 transform = glm::mat3(
 			1.0f, 0.0f ,0.0f,
 			0.0f, 0.0f ,0.0f,
 			0.0f, 0.0f ,1.0f
@@ -105,7 +106,9 @@ void processInput(GLFWwindow* window){
 	
 	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 		cameraPos.y -= cameraSpeed * deltaTime;	
-	
+
+	if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
+		flashLight_switch = !flashLight_switch;
 
 }
 
@@ -160,6 +163,28 @@ glm::mat4 look_at(glm::vec3 position ,glm::vec3 target,glm::vec3 world_up){
 	glm::mat4 right = glm::translate(glm::mat4(1.0f), -position);
 	
 	return left * right;
+}
+
+void setPointLight(unsigned int shaderID, size_t index 
+		, glm::vec3 light_position, glm::vec3 light_ambient
+		, glm::vec3 light_diffuse, glm::vec3 light_specular
+		, float constant , float linear , float quadratic)
+{ 
+	std::string s_pos   = "pointLights[" + std::to_string(index) + "].position";
+	std::string s_amb   = "pointLights[" + std::to_string(index) + "].ambient";
+	std::string s_dif   = "pointLights[" + std::to_string(index) + "].diffuse";
+	std::string s_spec  = "pointLights[" + std::to_string(index) + "].specular";
+	std::string s_const = "pointLights[" + std::to_string(index) + "].constant";
+	std::string s_lin   = "pointLights[" + std::to_string(index) + "].linear";
+	std::string s_quad  = "pointLights[" + std::to_string(index) + "].quadratic";
+
+	glUniform3fv(glGetUniformLocation(shaderID,s_pos .c_str()), 1, glm::value_ptr(light_position));
+	glUniform3fv(glGetUniformLocation(shaderID,s_amb .c_str()), 1, glm::value_ptr(light_ambient));
+	glUniform3fv(glGetUniformLocation(shaderID,s_dif .c_str()), 1, glm::value_ptr(light_diffuse));
+	glUniform3fv(glGetUniformLocation(shaderID,s_spec.c_str()), 1, glm::value_ptr(light_specular));
+	glUniform1f(glGetUniformLocation(shaderID,s_const.c_str()) ,constant);
+	glUniform1f(glGetUniformLocation(shaderID,s_lin  .c_str()) ,linear);
+	glUniform1f(glGetUniformLocation(shaderID,s_quad .c_str()) ,quadratic);
 }
 
 int main(){ 
@@ -250,19 +275,6 @@ int main(){
 		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
 		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
 	};
-	
-	glm::vec3 cubePositions[] = {
-		glm::vec3( 0.0f,  0.0f,  0.0f),
-		glm::vec3( 2.0f,  5.0f, -15.0f),
-		glm::vec3(-1.5f, -2.2f, -2.5f),
-		glm::vec3(-3.8f, -2.0f, -12.3f),
-		glm::vec3( 2.4f, -0.4f, -3.5f),
-		glm::vec3(-1.7f,  3.0f, -7.5f),
-		glm::vec3( 1.3f, -2.0f, -2.5f),
-		glm::vec3( 1.5f,  2.0f, -2.5f),
-		glm::vec3( 1.5f,  0.2f, -1.5f),
-		glm::vec3(-1.3f,  1.0f, -1.5f)
-	};
 
     unsigned int VBO,VAO,lightVAO;
     glGenVertexArrays(1,&VAO);
@@ -299,6 +311,20 @@ int main(){
 	//glm::vec3 cubePos(0.0f , 0.0f ,0.0f);
 	//glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
+	
+	glm::vec3 cubePositions[] = {
+		glm::vec3( 0.0f,  0.0f,  0.0f),
+		glm::vec3( 2.0f,  5.0f, -15.0f),
+		glm::vec3(-1.5f, -2.2f, -2.5f),
+		glm::vec3(-3.8f, -2.0f, -12.3f),
+		glm::vec3( 2.4f, -0.4f, -3.5f),
+		glm::vec3(-1.7f,  3.0f, -7.5f),
+		glm::vec3( 1.3f, -2.0f, -2.5f),
+		glm::vec3( 1.5f,  2.0f, -2.5f),
+		glm::vec3( 1.5f,  0.2f, -1.5f),
+		glm::vec3(-1.3f,  1.0f, -1.5f)
+	};
+
 	glm::vec3 pointLightPositions[] = {
 		glm::vec3( 0.7f,  0.2f,  2.0f),
 		glm::vec3( 2.3f, -3.3f, -4.0f),
@@ -309,13 +335,14 @@ int main(){
 
     //glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
 
+	const glm::vec3 worldColor(0.75f,0.5f,0.1f);
 	float currentFrame,lastFrame = 0.0f;
 
     while (!glfwWindowShouldClose(window))
     {
         processInput(window);
 
-        glClearColor(0.1f,0.1f,0.1f,1.0f);
+        glClearColor(worldColor.x,worldColor.y,worldColor.z,1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
 		//Calculate Delta Time
@@ -335,55 +362,37 @@ int main(){
 		shader.setVec3Uniform("spotLight.direction", cameraFront.x, cameraFront.y, cameraFront.z);
 		glUniform1f(glGetUniformLocation(shader.ID,"spotLight.cutoff"),glm::cos(glm::radians(12.5f)));
 		glUniform1f(glGetUniformLocation(shader.ID,"spotLight.outerCutoff"),glm::cos(glm::radians(17.5f)));	 
-		shader.setVec3Uniform("spotLight.ambient", 0.2f, 0.2f, 0.2f); //flashLight propreties
-        shader.setVec3Uniform("spotLight.diffuse", 0.5f, 0.5f, 0.5f);
-        shader.setVec3Uniform("spotLight.specular", 1.0f, 1.0f, 1.0f);
 		glUniform1f(glGetUniformLocation(shader.ID,"spotLight.constant") ,1.0f);
 		glUniform1f(glGetUniformLocation(shader.ID,"spotLight.linear")   ,0.09f);
 		glUniform1f(glGetUniformLocation(shader.ID,"spotLight.quadratic"),0.0032f);
+		if (flashLight_switch){ 
+			shader.setVec3Uniform("spotLight.ambient", 0.2f, 0.2f, 0.2f); //flashLight propreties
+			shader.setVec3Uniform("spotLight.diffuse", 0.5f, 0.5f, 0.5f);
+			shader.setVec3Uniform("spotLight.specular", 1.0f, 1.0f, 1.0f);
+		} else { 
+			shader.setVec3Uniform("spotLight.ambient" ,glm::vec3(0.0f) ); 
+			shader.setVec3Uniform("spotLight.diffuse" ,glm::vec3(0.0f) );
+			shader.setVec3Uniform("spotLight.specular",glm::vec3(0.0f) );
+		}
 
 		//Directional Light
 		shader.setVec3Uniform("dirLight.direction", -0.2f, -1.0f, -0.3f);
-        shader.setVec3Uniform("dirLight.ambient", 0.05f, 0.05f, 0.05f);
-        shader.setVec3Uniform("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
-        shader.setVec3Uniform("dirLight.specular", 0.5f, 0.5f, 0.5f);
+        shader.setVec3Uniform("dirLight.ambient", worldColor);
+        shader.setVec3Uniform("dirLight.diffuse", worldColor);
+        shader.setVec3Uniform("dirLight.specular", worldColor);
 
 		//Point Lights	
-		glUniform1f(glGetUniformLocation(shader.ID,"pointLights[0].linear")   ,0.09f);	
-		shader.setVec3Uniform("pointLights[0].position", pointLightPositions[0].x, pointLightPositions[0].y, pointLightPositions[0].z);
-		shader.setVec3Uniform("pointLights[0].ambient", 0.05, 0.05, 0.05); 
-        shader.setVec3Uniform("pointLights[0].diffuse", 0.5f, 0.5f, 0.5f);
-        shader.setVec3Uniform("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
-		glUniform1f(glGetUniformLocation(shader.ID,"pointLights[0].constant") ,1.0f);
-		glUniform1f(glGetUniformLocation(shader.ID,"pointLights[0].linear")   ,0.09f);
-		glUniform1f(glGetUniformLocation(shader.ID,"pointLights[0].quadratic"),0.032f);
-
-		glUniform1f(glGetUniformLocation(shader.ID,"pointLights[1].linear")   ,0.09f);	
-		shader.setVec3Uniform("pointLights[1].position", pointLightPositions[1].x, pointLightPositions[1].y, pointLightPositions[1].z);
-		shader.setVec3Uniform("pointLights[1].ambient", 0.05, 0.05, 0.05); 
-        shader.setVec3Uniform("pointLights[1].diffuse", 0.5f, 0.5f, 0.5f);
-        shader.setVec3Uniform("pointLights[1].specular", 1.0f, 1.0f, 1.0f);
-		glUniform1f(glGetUniformLocation(shader.ID,"pointLights[1].constant") ,1.0f);
-		glUniform1f(glGetUniformLocation(shader.ID,"pointLights[1].linear")   ,0.09f);
-		glUniform1f(glGetUniformLocation(shader.ID,"pointLights[1].quadratic"),0.032f);
-
-		glUniform1f(glGetUniformLocation(shader.ID,"pointLights[2].linear")   ,0.09f);	
-		shader.setVec3Uniform("pointLights[2].position", pointLightPositions[2].x, pointLightPositions[2].y, pointLightPositions[2].z);
-		shader.setVec3Uniform("pointLights[2].ambient", 0.05, 0.05, 0.05); 
-        shader.setVec3Uniform("pointLights[2].diffuse", 0.5f, 0.5f, 0.5f);
-        shader.setVec3Uniform("pointLights[2].specular", 1.0f, 1.0f, 1.0f);
-		glUniform1f(glGetUniformLocation(shader.ID,"pointLights[2].constant") ,1.0f);
-		glUniform1f(glGetUniformLocation(shader.ID,"pointLights[2].linear")   ,0.09f);
-		glUniform1f(glGetUniformLocation(shader.ID,"pointLights[2].quadratic"),0.032);
-
-		glUniform1f(glGetUniformLocation(shader.ID,"pointLights[3].linear")   ,0.09f);	
-		shader.setVec3Uniform("pointLights[3].position", pointLightPositions[3].x, pointLightPositions[3].y, pointLightPositions[3].z);
-		shader.setVec3Uniform("pointLights[3].ambient", 0.05, 0.05, 0.05); 
-        shader.setVec3Uniform("pointLights[3].diffuse", 0.5f, 0.5f, 0.5f);
-        shader.setVec3Uniform("pointLights[3].specular", 1.0f, 1.0f, 1.0f);
-		glUniform1f(glGetUniformLocation(shader.ID,"pointLights[3].constant") ,1.0f);
-		glUniform1f(glGetUniformLocation(shader.ID,"pointLights[3].linear")   ,0.09f);
-		glUniform1f(glGetUniformLocation(shader.ID,"pointLights[3].quadratic"),0.032f);
+		for(int i =0 ; i < 4 ; i++) { 
+			setPointLight(shader.ID,i
+					,pointLightPositions[i]      // position
+					,glm::vec3(0.05, 0.05, 0.05) // ambient
+					,glm::vec3(0.5f, 0.5f, 0.5f) // diffuse
+					,glm::vec3(1.0f, 1.0f, 1.0f) // specular
+					,1.0f                        // constant
+					,0.09f                       // linear
+					,0.032f                      // quadratic
+				);
+		}
 
 		//material propreties
 		glUniform1i(glGetUniformLocation(shader.ID,"material.diffuse") ,0);

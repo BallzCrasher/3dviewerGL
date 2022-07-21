@@ -3,6 +3,7 @@
 #include <sstream>
 #include <fstream>
 #include <iostream>
+#include "glm/vec3.hpp"
 
 class Shader
 {
@@ -75,5 +76,9 @@ public:
     }
     void setVec3Uniform(const char* name,float v1,float v2,float v3){
         glUniform3f(glGetUniformLocation(ID,name),v1,v2,v3);
+    }
+
+    void setVec3Uniform(const char* name,glm::vec3 v){
+        glUniform3fv(glGetUniformLocation(ID,name),1, &v[0]);
     }
 };
