@@ -18,6 +18,7 @@
 #include "includes/Shader.h"
 #include "includes/glm/matrix.hpp"
 #include "includes/glm/trigonometric.hpp"
+#include "includes/model.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "includes/stb_image.h"
 
