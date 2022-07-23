@@ -5,6 +5,7 @@
 #include "glm/fwd.hpp"
 #include "Shader.h"
 #include <assimp/material.h>
+#include <assimp/types.h>
 #include <cstddef>
 #include <iostream>
 #include <string>
@@ -201,6 +202,7 @@ struct Model{
 				textures_loaded.push_back(texture); // add to loaded textures
 			}
 		}
+		return textures;
 	}
 
 	unsigned int load_texture(const char* texture_path){	
@@ -233,8 +235,8 @@ struct Model{
 		return texture;
 	}
 
-	static unsigned int TextureFromFile(const char *path, const std::string &directory, bool gamma)
-	{
+
+	static unsigned int TextureFromFile(const char *path, const std::string &directory) {
 		std::string filename = std::string(path);
 		filename = directory + '/' + filename;
 
@@ -272,8 +274,8 @@ struct Model{
 
 		return textureID;
 	}
-
 };
+
 
 
 #endif /* ifndef MODEL_H */
