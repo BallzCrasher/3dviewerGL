@@ -1,9 +1,8 @@
 #ifndef MODEL_H
 #define MODEL_H 
 
-#include "glm/glm.hpp"
-#include "glm/fwd.hpp"
-#include "Shader.h"
+#include <glm/glm.hpp>
+#include <glm/fwd.hpp>
 #include <assimp/material.h>
 #include <assimp/types.h>
 #include <cstddef>
@@ -14,6 +13,7 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+#include "Shader.h"
 #include "stb_image.h"
 
 struct Vertex{ 
@@ -27,6 +27,8 @@ struct Texture{
 	std::string type;
 	std::string path;
 };
+
+std::vector<Texture> textures_loaded; 
 
 struct Mesh{ 
 	std::vector<Vertex> vertices;
@@ -95,23 +97,25 @@ private:
 };
 
 struct Model{ 
+    Model(std::string const &path, bool gamma = false) : gammaCorrection(gamma)
+    {
+        loadModel(path);
+    }
 
-	static std::vector<Texture> textures_loaded; 
-	std::vector<Mesh> meshs;
-	std::string directory;
-
-	Model(char* path){ 
-
-	}
 	void draw(Shader& shader){ 
 		for(int i = 0; i < meshs.size(); i++)
 			meshs[i].Draw(shader);
 	}
 	
+private:
+	std::vector<Mesh> meshs;
+	std::string directory;
+	bool gammaCorrection;
+
 	void loadModel(std::string path){ 
 		Assimp::Importer importer;
 		const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
-	
+
 		if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode){
 			std::cout << "ERROR::ASSIMP::" << importer.GetErrorString() << std::endl;
 			return;
@@ -126,6 +130,10 @@ struct Model{
 		for(int i = 0 ; i < node->mNumMeshes; i++){ 
 			aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
 			meshs.push_back(processMesh(mesh, scene));
+		}
+
+		for(int i = 0; i < node->mNumChildren; i++){ 
+			processNode(node->mChildren[i], scene);
 		}
 	}
 
@@ -142,10 +150,12 @@ struct Model{
 			tvector.z = mesh->mVertices[i].z;
 			vertex.position = tvector;
 
-			tvector.x = mesh->mNormals[i].x;
-			tvector.y = mesh->mNormals[i].y;
-			tvector.z = mesh->mNormals[i].z;
-			vertex.normal = tvector;
+			if (mesh->HasNormals()){ 
+				tvector.x = mesh->mNormals[i].x;
+				tvector.y = mesh->mNormals[i].y;
+				tvector.z = mesh->mNormals[i].z;
+				vertex.normal = tvector;
+			}
 
 			if(mesh->mTextureCoords[0]) {
 				glm::vec2 vec;
@@ -185,13 +195,14 @@ struct Model{
 			bool skip = false;
 			for(unsigned int j = 0; j < textures_loaded.size(); j++)
 			{
-				if(std::strcmp(textures_loaded[j].path.data(), str.C_Str()) == 0)
+				if(std::strcmp(textures_loaded[j].path.data(), str.C_Str()) == 0) // equal
 				{
 					textures.push_back(textures_loaded[j]);
 					skip = true; 
 					break;
 				}
 			}
+
 			if(!skip)
 			{   // if texture hasn't been loaded already, load it
 				Texture texture;
@@ -203,36 +214,6 @@ struct Model{
 			}
 		}
 		return textures;
-	}
-
-	unsigned int load_texture(const char* texture_path){	
-		unsigned int texture;
-		glGenTextures(1,&texture);
-		glBindTexture(GL_TEXTURE_2D,texture);
-		int x,y,nrChannel;
-		unsigned char* data = stbi_load(texture_path,&x,&y,&nrChannel,0);
-		if (data){
-			GLenum format;
-				if (nrChannel == 1)
-					format = GL_RED;
-				else if (nrChannel == 3)
-					format = GL_RGB;
-				else if (nrChannel == 4)
-					format = GL_RGBA;
-
-			glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,x,y,0,format,GL_UNSIGNED_BYTE,data);
-			glGenerateMipmap(GL_TEXTURE_2D);
-
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-		} else {
-			std::cout<<"FAILED TO LOAD IMAGE!"<<std::endl;
-		}
-		stbi_image_free(data);
-		return texture;
 	}
 
 

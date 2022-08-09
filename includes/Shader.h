@@ -7,7 +7,7 @@
 #include <sstream>
 #include <fstream>
 #include <iostream>
-#include "glm/vec3.hpp"
+#include <glm/vec3.hpp>
 
 class Shader
 {
