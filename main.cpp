@@ -199,6 +199,15 @@ void setSpotLight(unsigned int shaderID
 	glUniform1f (glGetUniformLocation(shaderID,"spotLight.outerCutoff") ,outerCutoff);
 }
 
+void setDirectionalLight(unsigned int shaderID ,glm::vec3 light_direction
+		,glm::vec3 light_ambient  , glm::vec3 light_diffuse , glm::vec3 light_specular)
+{
+	glUniform3fv(glGetUniformLocation(shaderID,"dirLight.direction"), 1, glm::value_ptr(light_direction));
+	glUniform3fv(glGetUniformLocation(shaderID,"dirLight.ambient"), 1, glm::value_ptr(light_ambient));
+	glUniform3fv(glGetUniformLocation(shaderID,"dirLight.diffuse"), 1, glm::value_ptr(light_diffuse));
+	glUniform3fv(glGetUniformLocation(shaderID,"dirLight.specular"), 1, glm::value_ptr(light_specular));
+}
+
 int main(){ 
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR,3);
@@ -232,7 +241,8 @@ int main(){
 	stbi_set_flip_vertically_on_load(true);
 	
 	std::cout << "LOADING MODELS" << std::endl;
-	Model matrix_cube("./models/backpack/mcube.obj");
+	//Model matrix_cube("./models/backpack/mcube.obj");
+	Model container("./models/container2/container2.obj");
 	Model light_cube("./models/cube/shit.obj");
 	std::cout << "FINISHED LOADING MODELS" << std::endl;
     //glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
@@ -240,7 +250,7 @@ int main(){
 	Shader shader("./shaders/vertexShader.glsl","./shaders/fragmentShader.glsl");
 	Shader light_shader("./shaders/light_vertexShader.glsl","./shaders/light_fragmentShader.glsl");
 
-	const glm::vec3 worldColor(0.75f,0.5f,0.1f);
+	const glm::vec3 worldColor(0.2f,0.2f,0.2f);
 	float currentFrame,lastFrame = 0.0f;
 	glm::vec3 light_pos;
     while (!glfwWindowShouldClose(window))
@@ -255,7 +265,8 @@ int main(){
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
-		light_pos = glm::vec3(2.0f * sinf(glfwGetTime()) * deltaTime ,2.0f,2.0f * cosf(glfwGetTime()) * deltaTime);
+		light_pos = glm::vec3(2.0f * sinf(glfwGetTime()) ,2.0f,2.0f * cosf(glfwGetTime()) );
+		//light_pos = glm::vec3(2.0f);
 
 		shader.use();
 
@@ -267,20 +278,51 @@ int main(){
 		glUniformMatrix4fv(glGetUniformLocation(shader.ID,"projection"),1,GL_FALSE,glm::value_ptr(projection));
 		glUniformMatrix4fv(glGetUniformLocation(shader.ID,"view"),1,GL_FALSE,glm::value_ptr(view));
 		glUniformMatrix4fv(glGetUniformLocation(shader.ID,"model"),1,GL_FALSE,glm::value_ptr(model));
-		setPointLight(shader.ID, 0, light_pos
-				,glm::vec3(1.0f, 1.0f,1.0f)    //light_ambient
-				,glm::vec3(1.0f, 1.0f,1.0f)    //light_diffuse
-				,glm::vec3(1.0f, 1.0f,1.0f)    //light_specular
-				,1.0f, 0.9f, 0.032);
-        matrix_cube.draw(shader);
+		shader.setVec3Uniform("viewPos",cameraPos.x , cameraPos.y , cameraPos.z);
+		glUniform1i(glGetUniformLocation(shader.ID,"flashLightON"),flashLight_switch);
+
+		setDirectionalLight(shader.ID, 
+			 glm::vec3(-0.2f, -1.0f, -0.3f), // direction
+			 glm::vec3(0.05f, 0.05f, 0.05f), // ambient
+			 glm::vec3(0.4f, 0.4f, 0.4f), // diffuse
+			 glm::vec3(0.5f, 0.5f, 0.5f) // specular
+		 );
+
+		setPointLight(shader.ID, 0, light_pos	
+				,glm::vec3(1.0f)       //light_ambient
+				,glm::vec3(1.0f)    //light_diffuse
+				,glm::vec3(1.0f)    //light_specular
+
+				//,glm::vec3(0.5f, 0.5f, 0.5f)       //light_ambient
+				//,glm::vec3(0.8f , 0.8f , 0.8f )    //light_diffuse
+				//,glm::vec3(1.0f , 1.0f , 1.0f )    //light_specular
+				//,1.0f, 0.9f, 0.32f);
+				,1.0f, 0.9f, 1.0f
+			);
+
+
+		setSpotLight(shader.ID, cameraPos, cameraFront
+				,glm::vec3(0.05f, 0.05f, 0.05f)    //light_ambient
+				,glm::vec3(0.8f , 0.8f , 0.8f )    //light_diffuse
+				,glm::vec3(1.0f , 1.0f , 1.0f )    //light_specular
+				,1.0f, 0.9f, 0.32f
+				,glm::cos(glm::radians(12.5f))
+				,glm::cos(glm::radians(15.0f))
+			);
+				//cosf(30.0f), cosf(60.0f));
+			
+
+        //matrix_cube.draw(shader);
+		container.draw(shader);
 		
-		//model = glm::translate(glm::mat4(1.0f) , light_pos);
-        //model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));	
-		//glUniformMatrix4fv(glGetUniformLocation(light_shader.ID,"projection"),1,GL_FALSE,glm::value_ptr(projection));
-		//glUniformMatrix4fv(glGetUniformLocation(light_shader.ID,"view"),1,GL_FALSE,glm::value_ptr(view));
-		//glUniformMatrix4fv(glGetUniformLocation(light_shader.ID,"model"),1,GL_FALSE,glm::value_ptr(model));
-		//light_shader.use();
-		//light_cube.draw(light_shader);
+		light_shader.use();
+		model = glm::translate(glm::mat4(1.0f) , light_pos);
+        model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));	
+		glUniformMatrix4fv(glGetUniformLocation(light_shader.ID,"projection"),1,GL_FALSE,glm::value_ptr(projection));
+		glUniformMatrix4fv(glGetUniformLocation(light_shader.ID,"view"),1,GL_FALSE,glm::value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(light_shader.ID,"model"),1,GL_FALSE,glm::value_ptr(model));
+		light_cube.draw(light_shader);
+
 	
         glfwSwapBuffers(window);
         glfwPollEvents();
