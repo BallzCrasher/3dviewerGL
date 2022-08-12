@@ -72,6 +72,8 @@ void mouse_callback(GLFWwindow* window, double xpos , double ypos){
 	cameraFront = glm::normalize(direction);
 }
 
+void toggleFlashlight(){ 
+}
 
 void processInput(GLFWwindow* window){
     if (glfwGetKey(window,GLFW_KEY_ENTER) == GLFW_PRESS)
@@ -280,6 +282,7 @@ int main(){
 		glUniformMatrix4fv(glGetUniformLocation(shader.ID,"model"),1,GL_FALSE,glm::value_ptr(model));
 		shader.setVec3Uniform("viewPos",cameraPos.x , cameraPos.y , cameraPos.z);
 		glUniform1i(glGetUniformLocation(shader.ID,"flashLightON"),flashLight_switch);
+		glUniform1f(glGetUniformLocation(shader.ID,"material.shininess"),8.0f);
 
 		setDirectionalLight(shader.ID, 
 			 glm::vec3(-0.2f, -1.0f, -0.3f), // direction
@@ -289,17 +292,11 @@ int main(){
 		 );
 
 		setPointLight(shader.ID, 0, light_pos	
-				,glm::vec3(1.0f)       //light_ambient
-				,glm::vec3(1.0f)    //light_diffuse
-				,glm::vec3(1.0f)    //light_specular
-
-				//,glm::vec3(0.5f, 0.5f, 0.5f)       //light_ambient
-				//,glm::vec3(0.8f , 0.8f , 0.8f )    //light_diffuse
-				//,glm::vec3(1.0f , 1.0f , 1.0f )    //light_specular
-				//,1.0f, 0.9f, 0.32f);
-				,1.0f, 0.9f, 1.0f
+				,glm::vec3(0.5f, 0.5f, 0.5f)       //light_ambient
+				,glm::vec3(0.8f , 0.8f , 0.8f )    //light_diffuse
+				,glm::vec3(1.0f , 1.0f , 1.0f )    //light_specular
+				,1.0f, 0.9f, 0.32f
 			);
-
 
 		setSpotLight(shader.ID, cameraPos, cameraFront
 				,glm::vec3(0.05f, 0.05f, 0.05f)    //light_ambient
@@ -309,10 +306,7 @@ int main(){
 				,glm::cos(glm::radians(12.5f))
 				,glm::cos(glm::radians(15.0f))
 			);
-				//cosf(30.0f), cosf(60.0f));
-			
 
-        //matrix_cube.draw(shader);
 		container.draw(shader);
 		
 		light_shader.use();
