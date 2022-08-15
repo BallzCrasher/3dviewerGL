@@ -182,7 +182,6 @@ void setPointLight(unsigned int shaderID, size_t index
 	glUniform1f(glGetUniformLocation(shaderID,s_lin  .c_str()) ,linear);
 	glUniform1f(glGetUniformLocation(shaderID,s_quad .c_str()) ,quadratic);
 }
-
 void setSpotLight(unsigned int shaderID
 		,glm::vec3 light_position , glm::vec3 light_direction
 		,glm::vec3 light_ambient  , glm::vec3 light_diffuse , glm::vec3 light_specular
@@ -239,44 +238,58 @@ int main(){
 
 	//OpenGL global state
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_STENCIL_TEST);
+    //glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
 
 	stbi_set_flip_vertically_on_load(true);
 	
 	std::cout << "LOADING MODELS" << std::endl;
-	//Model matrix_cube("./models/backpack/mcube.obj");
 	Model container("./models/container2/container2.obj");
 	Model light_cube("./models/cube/shit.obj");
+	Model plane("./models/plane/plane.obj");
 	std::cout << "FINISHED LOADING MODELS" << std::endl;
-    //glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
 
 	Shader shader("./shaders/vertexShader.glsl","./shaders/fragmentShader.glsl");
 	Shader light_shader("./shaders/light_vertexShader.glsl","./shaders/light_fragmentShader.glsl");
+	Shader outline_shader("./shaders/light_vertexShader.glsl","./shaders/outline_fragmentShader.glsl");
 
 	const glm::vec3 worldColor(0.2f,0.2f,0.2f);
 	float currentFrame,lastFrame = 0.0f;
 	glm::vec3 light_pos;
+	glm::mat4 model, projection , view;
     while (!glfwWindowShouldClose(window))
     {
         processInput(window);
 
         glClearColor(worldColor.x,worldColor.y,worldColor.z,1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glStencilMask(0xFF);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		glStencilMask(0x00);
 
 		//Calculate Delta Time
 		currentFrame = glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
+		//draw floor
+		light_shader.use();
+		model = glm::translate(glm::mat4(1.0f) , glm::vec3(0.0f, -1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(10.0f, 10.0f, 10.0f));	
+		glUniformMatrix4fv(glGetUniformLocation(light_shader.ID,"projection"),1,GL_FALSE,glm::value_ptr(projection));
+		glUniformMatrix4fv(glGetUniformLocation(light_shader.ID,"view"),1,GL_FALSE,glm::value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(light_shader.ID,"model"),1,GL_FALSE,glm::value_ptr(model));
+		light_shader.setVec3Uniform("lightColor", glm::vec3(0.5f));
+		plane.draw(light_shader);
+		
 		light_pos = glm::vec3(2.0f * sinf(glfwGetTime()) ,2.0f,2.0f * cosf(glfwGetTime()) );
-		//light_pos = glm::vec3(2.0f);
 
+		//draw container
 		shader.use();
-
-		glm::mat4 projection = glm::perspective(glm::radians(fov), (float) WIDTH /  (float) HEIGHT, 0.1f, 100.0f);
-        glm::mat4 view = look_at(cameraPos,cameraPos + cameraFront,cameraUp);
-	    glm::mat4 model = glm::mat4(1.0f);
+		projection = glm::perspective(glm::radians(fov), (float) WIDTH /  (float) HEIGHT, 0.1f, 100.0f);
+        view = look_at(cameraPos,cameraPos + cameraFront,cameraUp);
+	    model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
-																	//
+
 		glUniformMatrix4fv(glGetUniformLocation(shader.ID,"projection"),1,GL_FALSE,glm::value_ptr(projection));
 		glUniformMatrix4fv(glGetUniformLocation(shader.ID,"view"),1,GL_FALSE,glm::value_ptr(view));
 		glUniformMatrix4fv(glGetUniformLocation(shader.ID,"model"),1,GL_FALSE,glm::value_ptr(model));
@@ -289,14 +302,14 @@ int main(){
 			 glm::vec3(0.05f, 0.05f, 0.05f), // ambient
 			 glm::vec3(0.4f, 0.4f, 0.4f), // diffuse
 			 glm::vec3(0.5f, 0.5f, 0.5f) // specular
-		 );
+		);
 
 		setPointLight(shader.ID, 0, light_pos	
 				,glm::vec3(0.5f, 0.5f, 0.5f)       //light_ambient
 				,glm::vec3(0.8f , 0.8f , 0.8f )    //light_diffuse
 				,glm::vec3(1.0f , 1.0f , 1.0f )    //light_specular
 				,1.0f, 0.9f, 0.32f
-			);
+		);
 
 		setSpotLight(shader.ID, cameraPos, cameraFront
 				,glm::vec3(0.05f, 0.05f, 0.05f)    //light_ambient
@@ -305,16 +318,42 @@ int main(){
 				,1.0f, 0.9f, 0.32f
 				,glm::cos(glm::radians(12.5f))
 				,glm::cos(glm::radians(15.0f))
-			);
+		);
 
+		//drawing container with outline
+		//mask the container
+		glStencilOp(GL_KEEP,GL_KEEP,GL_REPLACE);
+		glStencilFunc(GL_ALWAYS,1,0xFF);
+		glStencilMask(0xFF);
 		container.draw(shader);
+
+		//draw only where the fragment isn't masked
+		glStencilFunc(GL_NOTEQUAL,1,0xFF);
+		glStencilMask(0x00);
+		glDisable(GL_DEPTH_TEST);
+
+		//Draw scaled up container 
+		outline_shader.use();
+		model = glm::scale(model,glm::vec3(1.05f));
+		glUniformMatrix4fv(glGetUniformLocation(outline_shader.ID,"view"),1,GL_FALSE,glm::value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(outline_shader.ID,"projection"),1,GL_FALSE,glm::value_ptr(projection));
+		glUniformMatrix4fv(glGetUniformLocation(outline_shader.ID,"model"),1,GL_FALSE,glm::value_ptr(model));
+		container.draw(outline_shader);
 		
+		//undo the stuff to draw other models
+		//glStencilMask(0xFF);
+		glStencilFunc(GL_ALWAYS,1,0xFF);
+		glEnable(GL_DEPTH_TEST);
+
+		glStencilMask(0x00);
+		//draw light_cube
 		light_shader.use();
 		model = glm::translate(glm::mat4(1.0f) , light_pos);
         model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));	
+		glUniformMatrix4fv(glGetUniformLocation(light_shader.ID,"model"),1,GL_FALSE,glm::value_ptr(model));
 		glUniformMatrix4fv(glGetUniformLocation(light_shader.ID,"projection"),1,GL_FALSE,glm::value_ptr(projection));
 		glUniformMatrix4fv(glGetUniformLocation(light_shader.ID,"view"),1,GL_FALSE,glm::value_ptr(view));
-		glUniformMatrix4fv(glGetUniformLocation(light_shader.ID,"model"),1,GL_FALSE,glm::value_ptr(model));
+		light_shader.setVec3Uniform("lightColor", glm::vec3(1.0f));
 		light_cube.draw(light_shader);
 
 	
