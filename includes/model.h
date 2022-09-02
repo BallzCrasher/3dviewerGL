@@ -66,7 +66,7 @@ struct Mesh{
 		glEnableVertexAttribArray(2);
 	}
 
-	void Draw(Shader& shader){ 
+	void Draw(Shader& shader) const { 
 		unsigned int diffuseNum = 1;
 		unsigned int specularNum = 1;
 		for(unsigned int i= 0; i < textures.size(); i++){ 
@@ -102,7 +102,7 @@ struct Model{
         loadModel(path);
     }
 
-	void draw(Shader& shader){ 
+	void draw(Shader& shader) const {  
 		for(int i = 0; i < meshs.size(); i++)
 			meshs[i].Draw(shader);
 	}
