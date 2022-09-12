@@ -1,4 +1,5 @@
 #include <glad/glad.h>
+#include <glm/detail/qualifier.hpp>
 #include <glm/geometric.hpp>
 #include <iomanip>
 #include <GLFW/glfw3.h>
@@ -170,31 +171,7 @@ int main(){
 		);
 
 		//drawing container with outline
-		//mask the container
-		glStencilOp(GL_KEEP,GL_KEEP,GL_REPLACE);
-		glStencilFunc(GL_ALWAYS,1,0xFF);
-		glStencilMask(0xFF);
-		container.draw(shader);
-
-		//draw only where the fragment isn't masked
-		glStencilFunc(GL_NOTEQUAL,1,0xFF);
-		glStencilMask(0x00);
-		glDisable(GL_DEPTH_TEST);
-
-		//Draw scaled up container 
-		outline_shader.use();
-		model = glm::scale(model,glm::vec3(1.05f));
-		glUniformMatrix4fv(glGetUniformLocation(outline_shader.ID,"view"),1,GL_FALSE,glm::value_ptr(view));
-		glUniformMatrix4fv(glGetUniformLocation(outline_shader.ID,"projection"),1,GL_FALSE,glm::value_ptr(projection));
-		glUniformMatrix4fv(glGetUniformLocation(outline_shader.ID,"model"),1,GL_FALSE,glm::value_ptr(model));
-		container.draw(outline_shader);
-		
-		//undo the stuff to draw other models
-		//glStencilMask(0xFF);
-		glStencilFunc(GL_ALWAYS,1,0xFF);
-		glEnable(GL_DEPTH_TEST);
-
-		glStencilMask(0x00);
+		drawObject_outlined(container,shader, outline_shader, model,view, projection,glm::vec3(1.05f));
 		//draw light_cube
 		light_shader.use();
 		model = glm::translate(glm::mat4(1.0f) , light_pos);
@@ -203,8 +180,8 @@ int main(){
 		glUniformMatrix4fv(glGetUniformLocation(light_shader.ID,"projection"),1,GL_FALSE,glm::value_ptr(projection));
 		glUniformMatrix4fv(glGetUniformLocation(light_shader.ID,"view"),1,GL_FALSE,glm::value_ptr(view));
 		light_shader.setVec3Uniform("lightColor", glm::vec3(1.0f));
-		light_cube.draw(light_shader);
-
+		//light_cube.draw(light_shader);
+		drawObject_outlined(light_cube,light_shader, outline_shader, model,view, projection,glm::vec3(1.05f));
 	
         glfwSwapBuffers(window);
         glfwPollEvents();
