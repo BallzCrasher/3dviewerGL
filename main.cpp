@@ -18,46 +18,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "includes/stb_image.h"
 
-void framebuffer_size_callback(GLFWwindow* window, int width , int height){
-    glViewport(0,0,width,height);
-}
-
-void scroll_callback(GLFWwindow* window , double xoffset , double yoffset){
-	fov -= (float)yoffset;
-	if (fov < 1.0f) fov = 1.0f;
-	if (fov > 45.0f) fov = 45.0f;
-}
-
-void mouse_callback(GLFWwindow* window, double xpos , double ypos){
-	if(firstMouseEnter){
-		lastMouseX = xpos;	
-		lastMouseY = ypos;	
-		firstMouseEnter = false;
-	}
-
-
-	float xoffset = xpos - lastMouseX;	
-	float yoffset = lastMouseY - ypos;
-
-	lastMouseX = xpos;
-	lastMouseY = ypos;
-
-	xoffset *= mouse_sensitivity;
-	yoffset *= mouse_sensitivity;
-
-	yaw   += xoffset;
-	pitch += yoffset;
-
-	if(pitch > 89.0f) pitch = 89.0f;
-	if(pitch < -89.0f) pitch = -89.0f;
-
-	glm::vec3 direction;
-	direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-	direction.y = sin(glm::radians(pitch));
-	direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-	cameraFront = glm::normalize(direction);
-}
-
 
 int main(){ 
     glfwInit();
@@ -66,7 +26,7 @@ int main(){
     glfwWindowHint(GLFW_OPENGL_PROFILE,GLFW_OPENGL_CORE_PROFILE);
 
     GLFWwindow* window = glfwCreateWindow(WIDTH,HEIGHT,"OpenGL Window",NULL,NULL);
-    if (window == NULL){
+    if (window == NULL) {
         std::cout<<"ERROR :: GLFWWindow not created !!"<<'\n';
         glfwTerminate();
         return -1;
@@ -78,6 +38,8 @@ int main(){
 	glfwSetInputMode(window,GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
+	glfwSetInputMode(window, GLFW_STICKY_KEYS, GLFW_TRUE);
+	setKeysCallbacks(window);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)){
         std::cout<<"ERROR :: Failed to load glad !!"<<std::endl;
@@ -123,14 +85,14 @@ int main(){
 		lastFrame = currentFrame;
 
 		//draw floor
-		light_shader.use();
-		model = glm::translate(glm::mat4(1.0f) , glm::vec3(0.0f, -1.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(10.0f, 10.0f, 10.0f));	
-		glUniformMatrix4fv(glGetUniformLocation(light_shader.ID,"projection"),1,GL_FALSE,glm::value_ptr(projection));
-		glUniformMatrix4fv(glGetUniformLocation(light_shader.ID,"view"),1,GL_FALSE,glm::value_ptr(view));
-		glUniformMatrix4fv(glGetUniformLocation(light_shader.ID,"model"),1,GL_FALSE,glm::value_ptr(model));
-		light_shader.setVec3Uniform("lightColor", glm::vec3(0.5f));
-		plane.draw(light_shader);
+		//light_shader.use();
+		//model = glm::translate(glm::mat4(1.0f) , glm::vec3(0.0f, -1.0f, 0.0f));
+        //model = glm::scale(model, glm::vec3(10.0f, 10.0f, 10.0f));	
+		//glUniformMatrix4fv(glGetUniformLocation(light_shader.ID,"projection"),1,GL_FALSE,glm::value_ptr(projection));
+		//glUniformMatrix4fv(glGetUniformLocation(light_shader.ID,"view"),1,GL_FALSE,glm::value_ptr(view));
+		//glUniformMatrix4fv(glGetUniformLocation(light_shader.ID,"model"),1,GL_FALSE,glm::value_ptr(model));
+		//light_shader.setVec3Uniform("lightColor", glm::vec3(0.5f));
+		//plane.draw(light_shader);
 		
 		light_pos = glm::vec3(2.0f * sinf(glfwGetTime()) ,2.0f,2.0f * cosf(glfwGetTime()) );
 
@@ -155,10 +117,10 @@ int main(){
 		);
 
 		setPointLight(shader.ID, 0, light_pos	
-				,glm::vec3(0.5f, 0.5f, 0.5f)       //light_ambient
+				,glm::vec3(0.1f, 0.1f, 0.1f)       //light_ambient
 				,glm::vec3(0.8f , 0.8f , 0.8f )    //light_diffuse
 				,glm::vec3(1.0f , 1.0f , 1.0f )    //light_specular
-				,1.0f, 0.9f, 0.32f
+				,1.0,0.045,0.0075
 		);
 
 		setSpotLight(shader.ID, cameraPos, cameraFront
@@ -172,6 +134,7 @@ int main(){
 
 		//drawing container with outline
 		drawObject_outlined(container,shader, outline_shader, model,view, projection,glm::vec3(1.05f));
+
 		//draw light_cube
 		light_shader.use();
 		model = glm::translate(glm::mat4(1.0f) , light_pos);
@@ -180,6 +143,7 @@ int main(){
 		glUniformMatrix4fv(glGetUniformLocation(light_shader.ID,"projection"),1,GL_FALSE,glm::value_ptr(projection));
 		glUniformMatrix4fv(glGetUniformLocation(light_shader.ID,"view"),1,GL_FALSE,glm::value_ptr(view));
 		light_shader.setVec3Uniform("lightColor", glm::vec3(1.0f));
+
 		//light_cube.draw(light_shader);
 		drawObject_outlined(light_cube,light_shader, outline_shader, model,view, projection,glm::vec3(1.05f));
 	

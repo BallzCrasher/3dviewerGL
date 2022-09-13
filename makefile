@@ -5,7 +5,7 @@ all: program
 program: .main.obj .glad.obj
 	g++ -g .main.obj .glad.obj $(CPPFLAGS)  -o program
 
-.main.obj: main.cpp
+.main.obj: main.cpp ./includes/*
 	g++ -g main.cpp $(CPPFLAGS) -o .main.obj -c
 
 .glad.obj: includes/glad.c

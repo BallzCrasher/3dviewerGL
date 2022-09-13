@@ -1,5 +1,9 @@
+#ifndef H_HELPER_FUNCTIONS
+#define H_HELPER_FUNCTIONS
+#include <cstdio>
 #include <glad/glad.h>
 #include <glm/geometric.hpp>
+#include <iostream>
 #include <iomanip>
 #include <GLFW/glfw3.h>
 #include <iostream>
@@ -29,9 +33,52 @@ bool firstMouseEnter = true;
 glm::vec3 cameraPos   = glm::vec3(0.0f,0.0f,3.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f,0.0f,-1.0f);
 glm::vec3 cameraUp    = glm::vec3(0.0f,1.0f,0.0f);
-bool flashLight_switch = true;
+bool flashLight_switch = false;
+
+
+void framebuffer_size_callback(GLFWwindow* window, int width , int height){
+    glViewport(0,0,width,height);
+}
+
+void scroll_callback(GLFWwindow* window , double xoffset , double yoffset){
+	fov -= (float)yoffset;
+	if (fov < 1.0f) fov = 1.0f;
+	if (fov > 45.0f) fov = 45.0f;
+}
+
+void mouse_callback(GLFWwindow* window, double xpos , double ypos){
+	if(firstMouseEnter){
+		lastMouseX = xpos;	
+		lastMouseY = ypos;	
+		firstMouseEnter = false;
+	}
+
+
+	float xoffset = xpos - lastMouseX;	
+	float yoffset = lastMouseY - ypos;
+
+	lastMouseX = xpos;
+	lastMouseY = ypos;
+
+	xoffset *= mouse_sensitivity;
+	yoffset *= mouse_sensitivity;
+
+	yaw   += xoffset;
+	pitch += yoffset;
+
+	if(pitch > 89.0f) pitch = 89.0f;
+	if(pitch < -89.0f) pitch = -89.0f;
+
+	glm::vec3 direction;
+	direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+	direction.y = sin(glm::radians(pitch));
+	direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+	cameraFront = glm::normalize(direction);
+}
+
 
 void toggleFlashlight(){ 
+	flashLight_switch = !flashLight_switch;
 }
 
 void processInput(GLFWwindow* window){
@@ -63,10 +110,17 @@ void processInput(GLFWwindow* window){
 	
 	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 		cameraPos.y -= cameraSpeed * deltaTime;	
+}
 
-	if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
-		flashLight_switch = !flashLight_switch;
-
+void setKeysCallbacks(GLFWwindow* window){ 
+	auto flashLight_callback = []
+		(GLFWwindow* winow, int key, int scancode, int action, int mods)
+	{ 
+		if (key == GLFW_KEY_F && action == GLFW_PRESS) { 
+			flashLight_switch = !flashLight_switch;
+		}
+	};
+	glfwSetKeyCallback(window, flashLight_callback);
 }
 
 std::ostream& operator<<(std::ostream& stream, glm::mat4 mat){
@@ -170,8 +224,10 @@ void setDirectionalLight(unsigned int shaderID ,glm::vec3 light_direction
 	glUniform3fv(glGetUniformLocation(shaderID,"dirLight.specular"), 1, glm::value_ptr(light_specular));
 }
 
+
 void drawObject_outlined(const Model& object ,Shader& shader ,Shader& outline_shader,
 				  glm::mat4 model, const glm::mat4& view, const glm::mat4& projection,const glm::vec3& scaleVector)
+//color is controlled though outline_shader
 { 
 		//mask the container
 		glStencilOp(GL_KEEP,GL_KEEP,GL_REPLACE);
@@ -199,3 +255,4 @@ void drawObject_outlined(const Model& object ,Shader& shader ,Shader& outline_sh
 
 		glStencilMask(0x00);
 }
+#endif
