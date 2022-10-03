@@ -1,5 +1,8 @@
+#include <algorithm>
 #include <glad/glad.h>
 #include <glm/detail/qualifier.hpp>
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/ext/vector_float3.hpp>
 #include <glm/geometric.hpp>
 #include <iomanip>
 #include <GLFW/glfw3.h>
@@ -38,7 +41,6 @@ int main(){
 	glfwSetInputMode(window,GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
-	glfwSetInputMode(window, GLFW_STICKY_KEYS, GLFW_TRUE);
 	setKeysCallbacks(window);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)){
@@ -47,24 +49,52 @@ int main(){
         return -2;
     }
 
+	float planeVertices[] = {
+		// positions             // texture Coords 
+		0.0f,  0.5f,  0.0f,      0.0f,  0.0f,
+        0.0f, -0.5f,  0.0f,      0.0f,  1.0f,
+        1.0f, -0.5f,  0.0f,      1.0f,  1.0f,
+
+        0.0f,  0.5f,  0.0f,      0.0f,  0.0f,
+        1.0f, -0.5f,  0.0f,      1.0f,  1.0f,
+        1.0f,  0.5f,  0.0f,      1.0f,  0.0f
+	};
+	// plane VAO
+    unsigned int planeVAO, planeVBO;
+    glGenVertexArrays(1, &planeVAO);
+    glGenBuffers(1, &planeVBO);
+    glBindVertexArray(planeVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), &planeVertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
 
 	//OpenGL global state
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_STENCIL_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     //glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
 
-	stbi_set_flip_vertically_on_load(true);
-	
+	unsigned int window_image = load_texture("./images/blending_transparent_window.png");
 
-	Shader shader("./shaders/vertexShader.glsl","./shaders/fragmentShader.glsl");
 	Shader light_shader("./shaders/light_vertexShader.glsl","./shaders/light_fragmentShader.glsl");
-	Shader outline_shader("./shaders/light_vertexShader.glsl","./shaders/outline_fragmentShader.glsl");
+	Shader transparent_shader("./shaders/grass_vertexShader.glsl","./shaders/grass_fragmentShader.glsl");
 
 	std::cout << "LOADING MODELS" << std::endl;
-	Model container("./models/container2/container2.obj");
-	Model light_cube("./models/cube/shit.obj");
 	Model plane("./models/plane/plane.obj");
 	std::cout << "FINISHED LOADING MODELS" << std::endl;
+
+	std::vector<glm::vec3> windows =
+    {
+        glm::vec3(-1.5f, 0.0f, -0.48f),
+        glm::vec3( 1.5f, 0.0f, 0.51f),
+        glm::vec3( 0.0f, 0.0f, 0.7f),
+        glm::vec3(-0.3f, 0.0f, -2.3f),
+        glm::vec3( 0.5f, 0.0f, -0.6f)
+    };
 
 	const glm::vec3 worldColor(0.2f,0.2f,0.2f);
 	float currentFrame,lastFrame = 0.0f;
@@ -84,68 +114,28 @@ int main(){
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
-		//draw floor
-		//light_shader.use();
-		//model = glm::translate(glm::mat4(1.0f) , glm::vec3(0.0f, -1.0f, 0.0f));
-        //model = glm::scale(model, glm::vec3(10.0f, 10.0f, 10.0f));	
-		//glUniformMatrix4fv(glGetUniformLocation(light_shader.ID,"projection"),1,GL_FALSE,glm::value_ptr(projection));
-		//glUniformMatrix4fv(glGetUniformLocation(light_shader.ID,"view"),1,GL_FALSE,glm::value_ptr(view));
-		//glUniformMatrix4fv(glGetUniformLocation(light_shader.ID,"model"),1,GL_FALSE,glm::value_ptr(model));
-		//light_shader.setVec3Uniform("lightColor", glm::vec3(0.5f));
-		//plane.draw(light_shader);
-		
 		light_pos = glm::vec3(2.0f * sinf(glfwGetTime()) ,2.0f,2.0f * cosf(glfwGetTime()) );
-
-		//draw container
-		shader.use();
 		projection = glm::perspective(glm::radians(fov), (float) WIDTH /  (float) HEIGHT, 0.1f, 100.0f);
         view = look_at(cameraPos,cameraPos + cameraFront,cameraUp);
-	    model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
-		glUniformMatrix4fv(glGetUniformLocation(shader.ID,"projection"),1,GL_FALSE,glm::value_ptr(projection));
-		glUniformMatrix4fv(glGetUniformLocation(shader.ID,"view"),1,GL_FALSE,glm::value_ptr(view));
-		glUniformMatrix4fv(glGetUniformLocation(shader.ID,"model"),1,GL_FALSE,glm::value_ptr(model));
-		shader.setVec3Uniform("viewPos",cameraPos.x , cameraPos.y , cameraPos.z);
-		glUniform1i(glGetUniformLocation(shader.ID,"flashLightON"),flashLight_switch);
-		glUniform1f(glGetUniformLocation(shader.ID,"material.shininess"),8.0f);
 
-		setDirectionalLight(shader.ID, 
-			 glm::vec3(-0.2f, -1.0f, -0.3f), // direction
-			 glm::vec3(0.05f, 0.05f, 0.05f), // ambient
-			 glm::vec3(0.4f, 0.4f, 0.4f), // diffuse
-			 glm::vec3(0.5f, 0.5f, 0.5f) // specular
-		);
-
-		setPointLight(shader.ID, 0, light_pos	
-				,glm::vec3(0.1f, 0.1f, 0.1f)       //light_ambient
-				,glm::vec3(0.8f , 0.8f , 0.8f )    //light_diffuse
-				,glm::vec3(1.0f , 1.0f , 1.0f )    //light_specular
-				,1.0,0.045,0.0075
-		);
-
-		setSpotLight(shader.ID, cameraPos, cameraFront
-				,glm::vec3(0.05f, 0.05f, 0.05f)    //light_ambient
-				,glm::vec3(0.8f , 0.8f , 0.8f )    //light_diffuse
-				,glm::vec3(1.0f , 1.0f , 1.0f )    //light_specular
-				,1.0f, 0.9f, 0.32f
-				,glm::cos(glm::radians(12.5f))
-				,glm::cos(glm::radians(15.0f))
-		);
-
-		//drawing container with outline
-		drawObject_outlined(container,shader, outline_shader, model,view, projection,glm::vec3(1.05f));
-
-		//draw light_cube
-		light_shader.use();
-		model = glm::translate(glm::mat4(1.0f) , light_pos);
-        model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));	
-		glUniformMatrix4fv(glGetUniformLocation(light_shader.ID,"model"),1,GL_FALSE,glm::value_ptr(model));
-		glUniformMatrix4fv(glGetUniformLocation(light_shader.ID,"projection"),1,GL_FALSE,glm::value_ptr(projection));
-		glUniformMatrix4fv(glGetUniformLocation(light_shader.ID,"view"),1,GL_FALSE,glm::value_ptr(view));
-		light_shader.setVec3Uniform("lightColor", glm::vec3(1.0f));
-
-		//light_cube.draw(light_shader);
-		drawObject_outlined(light_cube,light_shader, outline_shader, model,view, projection,glm::vec3(1.05f));
+		std::sort(windows.begin(), windows.end(), [](const glm::vec3& a, const glm::vec3& b){ 
+				return glm::distance(cameraPos , a) > glm::distance(cameraPos, b);
+		});
+		
+		for(int i = 0; i < windows.size(); i++) { 
+			//draw transparent
+			transparent_shader.use();
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, window_image);
+			glUniform1i(glGetUniformLocation(transparent_shader.ID,"grassTexture"), 0);
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, windows[i]);
+			glUniformMatrix4fv(glGetUniformLocation(transparent_shader.ID,"view"),1,GL_FALSE,glm::value_ptr(view));
+			glUniformMatrix4fv(glGetUniformLocation(transparent_shader.ID,"projection"),1,GL_FALSE,glm::value_ptr(projection));
+			glUniformMatrix4fv(glGetUniformLocation(transparent_shader.ID,"model"),1,GL_FALSE,glm::value_ptr(model));
+			glBindVertexArray(planeVAO);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+		}
 	
         glfwSwapBuffers(window);
         glfwPollEvents();
