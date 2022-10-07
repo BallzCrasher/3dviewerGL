@@ -49,56 +49,68 @@ int main(){
         glfwTerminate();
         return -2;
     }
+
 	const float cubeVertices[] = {
 		// Back face
 		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // Bottom-left
 		 0.5f, -0.5f, -0.5f,  1.0f, 0.0f, // bottom-right    
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right              
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right
 		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // top-left
-		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // bottom-left                
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right              
 		// Front face
 		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-left
-		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f, // top-right
 		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f, // bottom-right        
-		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f, // top-right
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-left
 		-0.5f,  0.5f,  0.5f,  0.0f, 1.0f, // top-left        
+		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f, // top-right
 		// Left face
-		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // top-right
 		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // bottom-left
-		-0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-left       
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // bottom-left
-		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // top-right
 		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-right
+		-0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-left       
+		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // top-right
 		// Right face
+		 0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-left
+		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // bottom-right          
 		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // top-left
 		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right      
-		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // bottom-right          
-		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // bottom-right
-		 0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-left
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // top-left
 		// Bottom face          
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // top-right
 		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f, // bottom-left
-		 0.5f, -0.5f, -0.5f,  1.0f, 1.0f, // top-left        
-		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f, // bottom-left
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // top-right
 		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-right
+		 0.5f, -0.5f, -0.5f,  1.0f, 1.0f, // top-left        
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // top-right
 		// Top face
+		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f, // bottom-left  
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // bottom-right                 
 		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // top-left
 		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // bottom-right                 
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // bottom-right
-		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f, // bottom-left  
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f  // top-left              
 	};
-	unsigned int cubeVAO, cubeVBO;
+	unsigned int indicies[] = {
+		// Back face
+		0,1,3,
+		3,2,0,
+		// Front face +4
+		4,7,5,
+		7,4,6,
+		// Left face +8
+		11,8,10,
+		8,11,9,
+		// Right face +12
+		14,15,13,
+		13,12,14,
+		// Bottom face + 16
+		19,16,18,
+		16,19,17,
+		// Top face + 20
+		22,23,21,
+		21,20,22
+	};
+	unsigned int cubeVAO, cubeVBO, cubeEBO;
 	glGenBuffers(1, &cubeVBO);
+	glGenBuffers(1, &cubeEBO);
 	glGenVertexArrays(1, &cubeVAO);
 	glBindVertexArray(cubeVAO);
 	glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cubeEBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicies), indicies, GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) 0);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) (3 * sizeof(float)));
@@ -118,6 +130,7 @@ int main(){
 	//unsigned int window_image = load_texture("./images/blending_transparent_window.png");
 	const unsigned int uvGrid = load_texture("./images/uvgrid.png");
 
+	std::cout << sizeof(indicies)/sizeof(unsigned int) << std::endl;
 	Shader normal_shader(
 			"./shaders/normal_vertexShader.glsl",
 		    "./shaders/normal_fragmentShader.glsl"
@@ -154,7 +167,8 @@ int main(){
 			glUniformMatrix4fv(glGetUniformLocation(normal_shader.ID,"view"), 1, GL_FALSE, glm::value_ptr(view));
 			glUniformMatrix4fv(glGetUniformLocation(normal_shader.ID,"model"), 1, GL_FALSE, glm::value_ptr(model));
 			glUniformMatrix4fv(glGetUniformLocation(normal_shader.ID,"projection"), 1, GL_FALSE, glm::value_ptr(projection));
-			glDrawArrays(GL_TRIANGLES, 0, 36);
+			//glDrawArrays(GL_TRIANGLES, 0, 36);
+			glDrawElements(GL_TRIANGLES,sizeof(indicies)/sizeof(unsigned int), GL_UNSIGNED_INT, 0);
 		}
 
 		/* end logic */
