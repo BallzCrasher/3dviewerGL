@@ -3,4 +3,5 @@ target/debug/*
 #for auto-complete 
 compile_flags.txt
 extra/images/*
+!extra/images/uvgrid.png
 extra/models/*
