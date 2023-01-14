@@ -1,0 +1,6 @@
+# exclude everything except directory 
+target/debug/*
+#for auto-complete 
+compile_flags.txt
+extra/images/*
+extra/models/*
