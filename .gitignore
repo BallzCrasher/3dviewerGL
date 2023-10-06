@@ -1,7 +1,10 @@
 # exclude everything except directory 
-target/debug/*
+build/*
 #for auto-complete 
 compile_flags.txt
+#extra
 extra/images/*
-!extra/images/uvgrid.png
 extra/models/*
+!extra/images/uvgrid.png
+#vendor
+vender/*
