@@ -23,7 +23,7 @@ Shader::Shader(const char* vertexShaderPath,const char* fragmentShaderPath){
 		fragmentShaderCode = fss.str();
 		vertexShaderCode = vss.str();
 	}
-	catch(std::ifstream::failure e)
+	catch(std::ifstream::failure& e)
 	{
 		std::cerr << "ERROR COULDN'T OPEN FILES " << '\n';
 		std::cerr << e.what() << ' ' << e.code() << '\n';
@@ -62,8 +62,8 @@ Shader::Shader(const char* vertexShaderPath,const char* fragmentShaderPath){
 		glGetProgramInfoLog(ID,512,NULL,infoLog);
 		std::cout<<"ERROR ::PROGRAM::LINK::"<<infoLog<<std::endl;
 	}
-
 }
+
 void Shader::use(){
 	glUseProgram(ID);
 }
