@@ -20,6 +20,7 @@
 
 void toggleFlashlight();
 std::ostream& operator<<(std::ostream& stream, glm::mat4 mat);
+std::ostream& operator<<(std::ostream& stream, glm::vec3 v);
 unsigned int load_texture(const char* path);
 glm::mat4 look_at(glm::vec3 position ,glm::vec3 target,glm::vec3 world_up);
 void setPointLight(unsigned int shaderID, size_t index 

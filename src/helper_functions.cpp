@@ -14,10 +14,6 @@
 #include "stb_image.h"
 #include "variables.hpp"
 
-void toggleFlashlight(){ 
-	flashLight_switch = !flashLight_switch;
-}
-
 std::ostream& operator<<(std::ostream& stream, glm::mat4 mat){
 	stream << std::fixed << std::setprecision(2);
 	for(int i= 0; i < 4;i++){
@@ -25,8 +21,17 @@ std::ostream& operator<<(std::ostream& stream, glm::mat4 mat){
 		for(int j = 0;j < 4; j++) std::cout << mat[i][j] << ' '; 
 		stream << " |\n";
 	}
-	stream << std::endl;
 	return stream;
+}
+
+std::ostream& operator<<(std::ostream& stream, glm::vec3 v){
+	stream << std::fixed << std::setprecision(2);
+	stream << "(" << v.x << ", " << v.y << ", " << v.z << ")";
+	return stream;
+}
+
+void toggleFlashlight() { 
+	flashLight_switch = !flashLight_switch;
 }
 
 unsigned int load_texture(const char* path){	
@@ -45,12 +50,15 @@ unsigned int load_texture(const char* path){
         else if (nrComponents == 4)
             format = GL_RGBA;
 
+				std::cerr << "loading picture at path: " << path 
+					<< " as " << (format == GL_RED ? "RED" : format == GL_RGB ? "jpg" : "png") << std::endl;
+
         glBindTexture(GL_TEXTURE_2D, textureID);
         glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, format == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT); // for this tutorial: use GL_CLAMP_TO_EDGE to prevent semi-transparent borders. Due to interpolation it takes texels from next repeat 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, format == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -61,8 +69,7 @@ unsigned int load_texture(const char* path){
         std::cout << "Texture failed to load at path: " << path << std::endl;
         stbi_image_free(data);
     }
-
-	return textureID;
+		return textureID;
 }
 
 
