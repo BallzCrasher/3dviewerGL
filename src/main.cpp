@@ -8,7 +8,7 @@
 #include <memory>
 #include <array>
 
-#include "helper_functions.hpp"
+#include "helper.hpp"
 #include "model.hpp"
 #include "shader.hpp"
 #include "callbacks.hpp"
@@ -134,7 +134,7 @@ int main() {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWwindow* window = glfwCreateWindow(WIDTH,HEIGHT,"OpenGL Window",NULL,NULL);
+	GLFWwindow* window = glfwCreateWindow(WIDTH,HEIGHT,"3DVGL",NULL,NULL);
   if (window == nullptr) {
       std::cout<<"ERROR :: GLFWWindow not created !!"<<'\n';
       glfwTerminate();
@@ -165,21 +165,24 @@ int main() {
 	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   //glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
 
-	//unsigned int window_image = load_texture("extra/images/blending_transparent_window.png");
 	stbi_set_flip_vertically_on_load(true);
 	const unsigned int uvGrid = load_texture("extra/images/uvgrid.png");
 
-	Shader normal_shader(
-    "src/shaders/normal_vertexShader.glsl",
-    "src/shaders/normal_fragmentShader.glsl"
+	Shader container_shader(
+    "src/shaders/model.vs",
+    "src/shaders/model.fs"
 	);
+  
+  Shader light_shader(
+    "src/shaders/light.vs",
+    "src/shaders/light.fs"
+  );
 
-	Shader buffer_shader(
-    "src/shaders/bufferVertexShader.glsl",
-    "src/shaders/bufferFragmentShader.glsl"
-	);
 
-	BasicCube cube;
+  BasicCube cube;
+  cube.shift({0.0f, 2.0f, 2.0f});
+  Model container("extra/models/container/container.obj");
+
 	const glm::vec3 worldColor(0.2f,0.2f,0.2f);
 	float currentFrame {}, lastFrame {};
   while (!glfwWindowShouldClose(window))
@@ -196,8 +199,44 @@ int main() {
     glClearColor(worldColor.x, worldColor.y, worldColor.z, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-		cube.rotate(60.0f * deltaTime, {1, 1, 0});
-		cube.draw(projection, view, uvGrid, normal_shader);
+    container_shader.use();
+    glm::mat4 model(1.0f);
+    container_shader.setVec3Uniform("viewPos", cameraPos);
+    glUniformMatrix4fv(glGetUniformLocation(container_shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+    glUniformMatrix4fv(glGetUniformLocation(container_shader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(glGetUniformLocation(container_shader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
+    setPointLight(container_shader.ID, 0, cube.coordinates(),
+        {1.0f, 1.0f, 1.0f},
+        {1.0f, 1.0f, 1.0f},
+        {1.0f, 1.0f, 1.0f},
+        1.0f, 0.09f, 0.032f
+    );
+    setDirectionalLight(container_shader.ID,
+        {-1.0f, -1.0f, -1.0f},
+        {0.001f, 0.001f, 0.001f},
+        {0.002f, 0.002f, 0.001f},
+        {0.005f, 0.005f, 0.005f}
+    );
+
+    glUniform1f(glGetUniformLocation(container_shader.ID, "material.shininess"), 1.0f);
+    glUniform1i(glGetUniformLocation(container_shader.ID, "flashLightON"), flashLight_switch);
+    setSpotLight(container_shader.ID,
+        cameraPos, cameraFront,
+        {1.0f, 1.0f, 1.0f},
+        {1.0f, 0.5f, 0.3f},
+        {0.5f, 0.5f, 0.5f},
+        1.0f, 0.09, 0.032f,
+        glm::cos(glm::radians(12.5f)),
+        glm::cos(glm::radians(17.5f))
+    );
+
+    container.draw(container_shader);
+
+    light_shader.use();
+    light_shader.setVec3Uniform("lightColor", {1, 1, 1});
+    cube.draw(projection, view, uvGrid, light_shader);
+
 		/* end logic */
     glfwSwapBuffers(window);
     glfwPollEvents();

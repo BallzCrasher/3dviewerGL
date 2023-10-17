@@ -1,18 +1,21 @@
-#include <glm/glm.hpp>
-#include <glm/fwd.hpp>
-#include <assimp/material.h>
-#include <assimp/types.h>
 #include <cstddef>
 #include <iostream>
 #include <string>
 #include <vector>
-#include <glad/glad.h>
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
+
 #include "shader.hpp"
 #include "stb_image.h"
 #include "model.hpp"
+
+#include <glad/glad.h>
+#include <glm/glm.hpp>
+#include <glm/fwd.hpp>
+#include <assimp/material.h>
+#include <assimp/types.h>
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
 
 static std::vector<Texture> textures_loaded; 
 
@@ -66,11 +69,12 @@ void Mesh::draw(Shader& shader) const {
 		glUniform1i(glGetUniformLocation(shader.ID, ("material." + name + number).c_str()) , i);
 		glBindTexture(GL_TEXTURE_2D, textures[i].id);
 	}
-	glActiveTexture(GL_TEXTURE0);
 
 	glBindVertexArray(VAO);
 	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT , 0);
 	glBindVertexArray(0);
+
+	glActiveTexture(GL_TEXTURE0);
 }
 	
 Model::Model(std::string const &path, bool gamma) : gammaCorrection(gamma)
@@ -79,8 +83,8 @@ Model::Model(std::string const &path, bool gamma) : gammaCorrection(gamma)
 }
 
 void Model::draw(Shader& shader) const {  
-	for(int i = 0; i < meshs.size(); i++)
-		meshs[i].draw(shader);
+  for (const auto& mesh : meshs)
+    mesh.draw(shader);
 }
 	
 void Model::loadModel(std::string path){ 
@@ -97,23 +101,23 @@ void Model::loadModel(std::string path){
 	processNode(scene->mRootNode, scene);
 }
 
-void Model::processNode(aiNode *node, const aiScene *scene) { 
-	for(int i = 0 ; i < node->mNumMeshes; i++){ 
+void Model::processNode(aiNode* node, const aiScene* scene) { 
+	for(size_t i = 0; i < node->mNumMeshes; i++){ 
 		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
 		meshs.push_back(processMesh(mesh, scene));
 	}
 
-	for(int i = 0; i < node->mNumChildren; i++){ 
+	for(size_t i = 0; i < node->mNumChildren; i++){ 
 		processNode(node->mChildren[i], scene);
 	}
 }
 
-Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) { 
+Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) { 
 	std::vector<Vertex> vertices;
 	std::vector<unsigned int> indices;
 	std::vector<Texture> textures;
 	
-	for(int i = 0; i < mesh->mNumVertices; i++){ 
+	for(size_t i = 0; i < mesh->mNumVertices; i++){ 
 		Vertex vertex;
 		glm::vec3 tvector;
 		tvector.x = mesh->mVertices[i].x;
@@ -140,14 +144,14 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
 		vertices.push_back(vertex);
 	}
 
-	for(int i = 0 ; i < mesh->mNumFaces;i++){ 
+	for(size_t i = 0 ; i < mesh->mNumFaces;i++){ 
 		aiFace face = mesh->mFaces[i];
-		for(int j = 0; j < face.mNumIndices;j++){ 
+		for(size_t j = 0; j < face.mNumIndices;j++){ 
 			indices.push_back(face.mIndices[j]);
 		}
 	}
 
-	if (mesh->mMaterialIndex >= 0){ 
+	if (mesh->mMaterialIndex >= 0) { 
 		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 		std::vector<Texture> diffuseMaps = loadMaterialTextures(material,aiTextureType_DIFFUSE, "texture_diffuse");
 		textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());

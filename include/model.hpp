@@ -41,8 +41,8 @@ private:
 	unsigned int VBO , VAO , EBO;
 };
 
-struct Model{ 
-    Model(std::string const &path, bool gamma = false);
+struct Model { 
+  Model(std::string const &path, bool gamma = false);
 
 	void draw(Shader& shader) const;
 	
