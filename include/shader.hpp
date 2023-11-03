@@ -6,18 +6,32 @@
 #include <sstream>
 #include <fstream>
 #include <iostream>
-#include <glm/vec3.hpp>
+#include <glm/ext.hpp>
 
 struct Shader {
     unsigned int ID;
 
-    Shader(const char* vertexShaderPath,const char* fragmentShaderPath);
+    Shader(const char* vertexShaderPath, const char* fragmentShaderPath);
     void use();
-    
     void cleanUp();
-    void setVec3Uniform(const char* name,float v1,float v2,float v3);
 
-    void setVec3Uniform(const char* name,glm::vec3 v);
+    GLint getUniformLocation(const char* name);
+    bool setFloat(const char* name, float f);
+    bool setInt(const char* name, int f);
+    bool setUnsignedInt(const char* name, unsigned int f);
+
+    bool setVec2(const char* name, const glm::vec2& v, size_t count = 1);
+    bool setVec3(const char* name, const glm::vec3& v, size_t count = 1);
+    bool setVec4(const char* name, const glm::vec4& v, size_t count = 1);
+    bool setMatrix(const char* name, const glm::mat2& m, bool transpose = false, size_t count = 1);
+    bool setMatrix(const char* name, const glm::mat3& m, bool transpose = false, size_t count = 1);
+    bool setMatrix(const char* name, const glm::mat4& m, bool transpose = false, size_t count = 1);
+    bool setMatrix(const char* name, const glm::mat2x3& m, bool transpose = false, size_t count = 1);
+    bool setMatrix(const char* name, const glm::mat3x2& m, bool transpose = false, size_t count = 1);
+    bool setMatrix(const char* name, const glm::mat4x2& m, bool transpose = false, size_t count = 1);
+    bool setMatrix(const char* name, const glm::mat2x4& m, bool transpose = false, size_t count = 1);
+    bool setMatrix(const char* name, const glm::mat4x3& m, bool transpose = false, size_t count = 1);
+    bool setMatrix(const char* name, const glm::mat3x4& m, bool transpose = false, size_t count = 1);
 };
 
 #endif 

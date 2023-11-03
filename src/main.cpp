@@ -201,10 +201,11 @@ int main() {
 
     container_shader.use();
     glm::mat4 model(1.0f);
-    container_shader.setVec3Uniform("viewPos", cameraPos);
-    glUniformMatrix4fv(glGetUniformLocation(container_shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
-    glUniformMatrix4fv(glGetUniformLocation(container_shader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
-    glUniformMatrix4fv(glGetUniformLocation(container_shader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
+    container_shader.setVec3("viewPos", cameraPos);
+    container_shader.setMatrix("model", model);
+    container_shader.setMatrix("view", view);
+    container_shader.setMatrix("projection", projection);
 
     setPointLight(container_shader.ID, 0, cube.coordinates(),
         {1.0f, 1.0f, 1.0f},
@@ -219,8 +220,8 @@ int main() {
         {0.005f, 0.005f, 0.005f}
     );
 
-    glUniform1f(glGetUniformLocation(container_shader.ID, "material.shininess"), 1.0f);
-    glUniform1i(glGetUniformLocation(container_shader.ID, "flashLightON"), flashLight_switch);
+    container_shader.setFloat("material.shininess", 1.0f);
+    container_shader.setInt("flashLightON", flashLight_switch);
     setSpotLight(container_shader.ID,
         cameraPos, cameraFront,
         {1.0f, 1.0f, 1.0f},
@@ -234,7 +235,7 @@ int main() {
     container.draw(container_shader);
 
     light_shader.use();
-    light_shader.setVec3Uniform("lightColor", {1, 1, 1});
+    light_shader.setVec3("lightColor", {1.0f, 1.0f, 1.0f});
     cube.draw(projection, view, uvGrid, light_shader);
 
 		/* end logic */

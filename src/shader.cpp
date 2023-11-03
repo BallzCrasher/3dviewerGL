@@ -3,7 +3,7 @@
 #include <sstream>
 #include <fstream>
 #include <iostream>
-#include <glm/vec3.hpp>
+#include <glm/ext.hpp>
 #include <shader.hpp>
 
 Shader::Shader(const char* vertexShaderPath,const char* fragmentShaderPath){
@@ -64,17 +64,114 @@ Shader::Shader(const char* vertexShaderPath,const char* fragmentShaderPath){
 	}
 }
 
+int Shader::getUniformLocation(const char* name) {
+  auto result = glGetUniformLocation(this->ID, name);
+  if (result == -1)
+    std::cerr << "Shader[id = " << ID 
+      << "]: Error::Couldn't find uniform" << name << std::endl;
+  return result;
+}
+
+/** numbers **/
+bool Shader::setFloat(const char* name, float value) {
+  auto pos = getUniformLocation(name);
+  glUniform1f(pos, value);
+  return pos != -1;
+}
+
+bool Shader::setInt(const char* name, int value) {
+  auto pos = getUniformLocation(name);
+  glUniform1i(pos, value);
+  return pos != -1;
+}
+
+bool Shader::setUnsignedInt(const char* name, unsigned int value) {
+  auto pos = getUniformLocation(name);
+  glUniform1ui(pos, value);
+  return pos != -1;
+}
+
+
+/** vectors **/
+bool Shader::setVec2(const char* name, const glm::vec2& v, size_t count) {
+  auto pos = getUniformLocation(name);
+  glUniform2fv(pos, count, glm::value_ptr(v));
+  return pos != -1;
+}
+
+bool Shader::setVec3(const char* name, const glm::vec3& v, size_t count) {
+  auto pos = getUniformLocation(name);
+  glUniform3fv(pos, count, glm::value_ptr(v));
+  return pos != -1;
+}
+
+bool Shader::setVec4(const char* name, const glm::vec4& v, size_t count) {
+  auto pos = getUniformLocation(name);
+  glUniform4fv(pos, count, glm::value_ptr(v));
+  return pos != -1;
+}
+
+
+/** matricies **/
+bool Shader::setMatrix(const char* name, const glm::mat2& m, bool transpose, size_t count) {
+  auto pos = getUniformLocation(name);
+  glUniformMatrix2fv(pos, count, transpose, glm::value_ptr(m));
+  return pos != -1;
+}
+
+bool Shader::setMatrix(const char* name, const glm::mat3& m, bool transpose, size_t count) {
+  auto pos = getUniformLocation(name);
+  glUniformMatrix3fv(pos, count, transpose, glm::value_ptr(m));
+  return pos != -1;
+}
+
+bool Shader::setMatrix(const char* name, const glm::mat4& m, bool transpose, size_t count) {
+  auto pos = getUniformLocation(name);
+  glUniformMatrix4fv(pos, count, transpose, glm::value_ptr(m));
+  return pos != -1;
+}
+
+bool Shader::setMatrix(const char* name, const glm::mat2x3& m, bool transpose, size_t count) {
+  auto pos = getUniformLocation(name);
+  glUniformMatrix2x3fv(pos, count, transpose, glm::value_ptr(m));
+  return pos != -1;
+}
+
+bool Shader::setMatrix(const char* name, const glm::mat3x2& m, bool transpose, size_t count) {
+  auto pos = getUniformLocation(name);
+  glUniformMatrix3x2fv(pos, count, transpose, glm::value_ptr(m));
+  return pos != -1;
+}
+
+bool Shader::setMatrix(const char* name, const glm::mat4x2& m, bool transpose, size_t count) {
+  auto pos = getUniformLocation(name);
+  glUniformMatrix4x2fv(pos, count, transpose, glm::value_ptr(m));
+  return pos != -1;
+}
+
+bool Shader::setMatrix(const char* name, const glm::mat2x4& m, bool transpose, size_t count) {
+  auto pos = getUniformLocation(name);
+  glUniformMatrix2x4fv(pos, count, transpose, glm::value_ptr(m));
+  return pos != -1;
+}
+
+bool Shader::setMatrix(const char* name, const glm::mat4x3& m, bool transpose, size_t count) {
+  auto pos = getUniformLocation(name);
+  glUniformMatrix4x3fv(pos, count, transpose, glm::value_ptr(m));
+  return pos != -1;
+}
+
+bool Shader::setMatrix(const char* name, const glm::mat3x4& m, bool transpose, size_t count) {
+  auto pos = getUniformLocation(name);
+  glUniformMatrix3x4fv(pos, count, transpose, glm::value_ptr(m));
+  return pos != -1;
+}
+
+
 void Shader::use(){
 	glUseProgram(ID);
 }
 
 void Shader::cleanUp(){
 	glDeleteProgram(ID);
-}
-void Shader::setVec3Uniform(const char* name,float v1,float v2,float v3){
-	glUniform3f(glGetUniformLocation(ID,name),v1,v2,v3);
-}
-
-void Shader::setVec3Uniform(const char* name,glm::vec3 v){
-	glUniform3fv(glGetUniformLocation(ID,name),1, &v[0]);
 }
