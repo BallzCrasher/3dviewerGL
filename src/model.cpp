@@ -6,6 +6,7 @@
 #include "shader.hpp"
 #include "stb_image.h"
 #include "model.hpp"
+#include "helper.hpp"
 
 #include <glad/glad.h>
 #include <glm/glm.hpp>
@@ -19,7 +20,7 @@
 
 static std::vector<Texture> textures_loaded; 
 
-Mesh::Mesh(std::vector<Vertex> vertices,std::vector<unsigned int> indices,std::vector<Texture> textures){ 
+Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures){ 
 	this->vertices = vertices;
 	this->indices = indices;
 	this->textures = textures;
@@ -77,7 +78,7 @@ void Mesh::draw(Shader& shader) const {
 	glActiveTexture(GL_TEXTURE0);
 }
 	
-Model::Model(std::string const &path, bool gamma) : gammaCorrection(gamma)
+Model::Model(std::filesystem::path path, bool gamma) : gammaCorrection(gamma)
 {
 	loadModel(path);
 }
@@ -87,7 +88,7 @@ void Model::draw(Shader& shader) const {
     mesh.draw(shader);
 }
 	
-void Model::loadModel(std::string path){ 
+void Model::loadModel(std::filesystem::path path){ 
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
 
@@ -96,7 +97,7 @@ void Model::loadModel(std::string path){
 		return;
 	}
 
-	directory = path.substr(0,path.find_last_of('/'));
+	directory = path.parent_path();
 
 	processNode(scene->mRootNode, scene);
 }
@@ -151,7 +152,7 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
 		}
 	}
 
-	if (mesh->mMaterialIndex >= 0) { 
+	if (mesh->mMaterialIndex > 0) { 
 		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 		std::vector<Texture> diffuseMaps = loadMaterialTextures(material,aiTextureType_DIFFUSE, "texture_diffuse");
 		textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
@@ -170,7 +171,7 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType 
 		bool skip = false;
 		for(unsigned int j = 0; j < textures_loaded.size(); j++)
 		{
-			if(std::strcmp(textures_loaded[j].path.data(), str.C_Str()) == 0) // equal
+			if(std::strcmp(textures_loaded[j].path.c_str(), str.C_Str()) == 0) // equal
 			{
 				textures.push_back(textures_loaded[j]);
 				skip = true; 
@@ -181,7 +182,7 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType 
 		if(!skip)
 		{   // if texture hasn't been loaded already, load it
 			Texture texture;
-			texture.id = TextureFromFile(str.C_Str(), directory);
+			texture.id = load_texture(directory / str.C_Str());
 			texture.type = typeName;
 			texture.path = str.C_Str();
 			textures.push_back(texture);
@@ -189,44 +190,4 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType 
 		}
 	}
 	return textures;
-}
-
-
-unsigned int Model::TextureFromFile(const char *path, const std::string &directory) {
-	std::string filename = std::string(path);
-	filename = directory + '/' + filename;
-
-	unsigned int textureID;
-	glGenTextures(1, &textureID);
-
-	int width, height, nrComponents;
-	unsigned char *data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
-	if (data)
-	{
-		GLenum format;
-		if (nrComponents == 1)
-			format = GL_RED;
-		else if (nrComponents == 3)
-			format = GL_RGB;
-		else if (nrComponents == 4)
-			format = GL_RGBA;
-
-		glBindTexture(GL_TEXTURE_2D, textureID);
-		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-		glGenerateMipmap(GL_TEXTURE_2D);
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-		stbi_image_free(data);
-	}
-	else
-	{
-		std::cout << "Texture failed to load at path: " << path << std::endl;
-		stbi_image_free(data);
-	}
-
-	return textureID;
 }

@@ -6,6 +6,7 @@
 #include <assimp/material.h>
 #include <assimp/types.h>
 #include <cstddef>
+#include <filesystem>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -25,7 +26,7 @@ struct Vertex{
 struct Texture{ 
 	unsigned int id;
 	std::string type;
-	std::string path;
+	std::filesystem::path path;
 };
 
 struct Mesh{ 
@@ -33,7 +34,7 @@ struct Mesh{
 	std::vector<unsigned int> indices;
 	std::vector<Texture> textures;
 
-	Mesh(std::vector<Vertex> vertices,std::vector<unsigned int> indices,std::vector<Texture> textures);
+	Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices,std::vector<Texture> textures);
 
 	void draw(Shader& shader) const;
 	
@@ -42,25 +43,22 @@ private:
 };
 
 struct Model { 
-  Model(std::string const &path, bool gamma = false);
+  Model(std::filesystem::path path, bool gamma = false);
 
 	void draw(Shader& shader) const;
 	
 private:
 	std::vector<Mesh> meshs;
-	std::string directory;
+	std::filesystem::path directory;
 	bool gammaCorrection;
 
-	void loadModel(std::string path);
+	void loadModel(std::filesystem::path path);
 
-	void processNode(aiNode *node, const aiScene *scene);
+	void processNode(aiNode* node, const aiScene* scene);
 
-	Mesh processMesh(aiMesh *mesh, const aiScene *scene);
+	Mesh processMesh(aiMesh* mesh, const aiScene* scene);
 
-	std::vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type,std::string typeName);
-
-
-	static unsigned int TextureFromFile(const char *path, const std::string &directory);
+	std::vector<Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName);
 };
 
 

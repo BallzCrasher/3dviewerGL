@@ -7,31 +7,33 @@
 #include <fstream>
 #include <iostream>
 #include <glm/ext.hpp>
+#include <filesystem>
+#include <string_view>
 
 struct Shader {
     unsigned int ID;
 
-    Shader(const char* vertexShaderPath, const char* fragmentShaderPath);
+    Shader(std::filesystem::path vertexShaderPath, std::filesystem::path fragmentShaderPath);
     void use();
     void cleanUp();
 
-    GLint getUniformLocation(const char* name);
-    bool setFloat(const char* name, float f);
-    bool setInt(const char* name, int f);
-    bool setUnsignedInt(const char* name, unsigned int f);
+    GLint getUniformLocation(std::string_view name);
+    bool setFloat      (std::string_view name, float f);
+    bool setInt        (std::string_view name, int f);
+    bool setUnsignedInt(std::string_view name, unsigned int f);
 
-    bool setVec2(const char* name, const glm::vec2& v, size_t count = 1);
-    bool setVec3(const char* name, const glm::vec3& v, size_t count = 1);
-    bool setVec4(const char* name, const glm::vec4& v, size_t count = 1);
-    bool setMatrix(const char* name, const glm::mat2& m, bool transpose = false, size_t count = 1);
-    bool setMatrix(const char* name, const glm::mat3& m, bool transpose = false, size_t count = 1);
-    bool setMatrix(const char* name, const glm::mat4& m, bool transpose = false, size_t count = 1);
-    bool setMatrix(const char* name, const glm::mat2x3& m, bool transpose = false, size_t count = 1);
-    bool setMatrix(const char* name, const glm::mat3x2& m, bool transpose = false, size_t count = 1);
-    bool setMatrix(const char* name, const glm::mat4x2& m, bool transpose = false, size_t count = 1);
-    bool setMatrix(const char* name, const glm::mat2x4& m, bool transpose = false, size_t count = 1);
-    bool setMatrix(const char* name, const glm::mat4x3& m, bool transpose = false, size_t count = 1);
-    bool setMatrix(const char* name, const glm::mat3x4& m, bool transpose = false, size_t count = 1);
+    bool setVec2  (std::string_view name, const glm::vec2&   v,                         size_t count = 1);
+    bool setVec3  (std::string_view name, const glm::vec3&   v,                         size_t count = 1);
+    bool setVec4  (std::string_view name, const glm::vec4&   v,                         size_t count = 1);
+    bool setMatrix(std::string_view name, const glm::mat2&   m, bool transpose = false, size_t count = 1);
+    bool setMatrix(std::string_view name, const glm::mat3&   m, bool transpose = false, size_t count = 1);
+    bool setMatrix(std::string_view name, const glm::mat4&   m, bool transpose = false, size_t count = 1);
+    bool setMatrix(std::string_view name, const glm::mat2x3& m, bool transpose = false, size_t count = 1);
+    bool setMatrix(std::string_view name, const glm::mat3x2& m, bool transpose = false, size_t count = 1);
+    bool setMatrix(std::string_view name, const glm::mat4x2& m, bool transpose = false, size_t count = 1);
+    bool setMatrix(std::string_view name, const glm::mat2x4& m, bool transpose = false, size_t count = 1);
+    bool setMatrix(std::string_view name, const glm::mat4x3& m, bool transpose = false, size_t count = 1);
+    bool setMatrix(std::string_view name, const glm::mat3x4& m, bool transpose = false, size_t count = 1);
 };
 
 #endif 
