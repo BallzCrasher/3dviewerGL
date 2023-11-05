@@ -54,7 +54,7 @@ int main() {
 	glEnable(GL_DEPTH_TEST);
 	glCullFace(GL_BACK);
 	glFrontFace(GL_CCW);
-	//glEnable(GL_STENCIL_TEST);
+	glEnable(GL_STENCIL_TEST);
 	//glEnable(GL_BLEND);
 	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   //glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
@@ -65,6 +65,11 @@ int main() {
 	Shader container_shader(
     "src/shaders/model.vs",
     "src/shaders/model.fs"
+	);
+
+	Shader outline_shader(
+    "src/shaders/default.vs",
+    "src/shaders/outline.fs"
 	);
   
   Shader light_shader(
@@ -92,15 +97,15 @@ int main() {
 		/* logic */
     glClearColor(worldColor.x, worldColor.y, worldColor.z, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		glStencilMask(0x00);
+		glStencilFunc(GL_ALWAYS, 1, 0xFF);
 
     container_shader.use();
     glm::mat4 model(1.0f);
-
     container_shader.setVec3("viewPos", cameraPos);
     container_shader.setMatrix("model", model);
     container_shader.setMatrix("view", view);
     container_shader.setMatrix("projection", projection);
-
     setPointLight(container_shader.ID, 0, cube.coordinates(),
         {1.0f, 1.0f, 1.0f},
         {1.0f, 1.0f, 1.0f},
@@ -113,7 +118,6 @@ int main() {
         {0.002f, 0.002f, 0.001f},
         {0.005f, 0.005f, 0.005f}
     );
-
     container_shader.setFloat("material.shininess", 1.0f);
     container_shader.setInt("flashLightON", flashLight_switch);
     setSpotLight(container_shader.ID,
@@ -126,11 +130,28 @@ int main() {
         glm::cos(glm::radians(17.5f))
     );
 
-    container.draw(container_shader);
 
     light_shader.use();
     light_shader.setVec3("lightColor", {1.0f, 1.0f, 1.0f});
     cube.draw(projection, view, uvGrid, light_shader);
+
+		container_shader.use();
+		model = glm::translate(model, {5.0f, 0.0f, 0.0f});
+    container_shader.setMatrix("model", model);
+    container.draw(container_shader);
+
+		container_shader.use();
+		model = glm::mat4(1.0f);
+		container_shader.setMatrix("model", model);
+		drawObject_outlined(container, 
+			container_shader, 
+			outline_shader,
+			model,
+			view,
+			projection,
+			{1.1f, 1.1f, 1.1f}
+		);
+
 
 		/* end logic */
     glfwSwapBuffers(window);

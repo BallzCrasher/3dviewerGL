@@ -39,6 +39,6 @@ void setSpotLight(unsigned int shaderID
 void setDirectionalLight(unsigned int shaderID ,glm::vec3 light_direction
  ,glm::vec3 light_ambient  , glm::vec3 light_diffuse , glm::vec3 light_specular);
 
-void drawObject_outlined(const Model& object ,Shader& shader ,Shader& outline_shader,
+void drawObject_outlined(const Model& object, Shader& shader, Shader& outline_shader,
 				  glm::mat4 model, const glm::mat4& view, const glm::mat4& projection,const glm::vec3& scaleVector);
 #endif

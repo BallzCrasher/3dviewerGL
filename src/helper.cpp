@@ -141,14 +141,15 @@ void setDirectionalLight(unsigned int shaderID ,glm::vec3 light_direction
 }
 
 
-void drawObject_outlined(const Model& object ,Shader& shader ,Shader& outline_shader,
-				  glm::mat4 model, const glm::mat4& view, const glm::mat4& projection,const glm::vec3& scaleVector)
 //color is controlled though outline_shader
+void drawObject_outlined(const Model& object, Shader& shader, Shader& outline_shader,
+				  glm::mat4 model, const glm::mat4& view, const glm::mat4& projection,const glm::vec3& scaleVector)
 { 
 		//mask the container
 		glStencilOp(GL_KEEP,GL_KEEP,GL_REPLACE);
 		glStencilFunc(GL_ALWAYS,1,0xFF);
 		glStencilMask(0xFF);
+		glClear(GL_STENCIL_BUFFER_BIT);
 		object.draw(shader);
 
 		//draw only where the fragment isn't masked
@@ -165,10 +166,8 @@ void drawObject_outlined(const Model& object ,Shader& shader ,Shader& outline_sh
 		object.draw(outline_shader);
 		
 		//undo the stuff to draw other models
-		//glStencilMask(0xFF);
-		glStencilFunc(GL_ALWAYS,1,0xFF);
+		glStencilMask(0xFF);
+		glStencilFunc(GL_ALWAYS, 1, 0xFF);
 		glEnable(GL_DEPTH_TEST);
-
-		glStencilMask(0x00);
 }
 #endif
