@@ -35,7 +35,7 @@ std::ostream& operator<<(std::ostream& stream, glm::vec3 v){
 }
 
 void toggleFlashlight() { 
-	flashLight_switch = !flashLight_switch;
+	GlobalVars::flashlight_switch = !GlobalVars::flashlight_switch;
 }
 
 unsigned int load_texture(std::filesystem::path path){	
