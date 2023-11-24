@@ -14,8 +14,8 @@ struct Shader {
     unsigned int ID;
 
     Shader(std::filesystem::path vertexShaderPath, std::filesystem::path fragmentShaderPath);
+		~Shader();
     void use();
-    void cleanUp();
 
     GLint getUniformLocation(std::string_view name);
     bool setFloat      (std::string_view name, float f);

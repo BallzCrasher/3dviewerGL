@@ -8,61 +8,72 @@
 #include <shader.hpp>
 #include <filesystem>
 
-Shader::Shader(std::filesystem::path vertexShaderPath, std::filesystem::path fragmentShaderPath){
-	std::string fragmentShaderCode;
-	std::string vertexShaderCode;
-	std::ifstream vertFile;
-	std::ifstream fragFile;
+/**
+ * Shader constructor. 
+ * This will compile and link the vertex shader and the fragment shader.
+ * And will create a program and assign it a unique id.
+ * any errors generated through this process will be sent to stdout.
+ *
+ * @param vertex_shader_path the path to the vertex shader code.
+ * @param fragment_shader_path the path to the fragment shader code.
+ */
+Shader::Shader(
+		std::filesystem::path vertex_shader_path,
+		std::filesystem::path fragment_shader_path) 
+{
+	std::string fragment_shader_code;
+	std::string vertex_shader_code;
+	std::ifstream vert_file;
+	std::ifstream frag_file;
 	try
 	{
-		vertFile.open(vertexShaderPath);
-		fragFile.open(fragmentShaderPath);
-		std::stringstream vss,fss;
-		vss << vertFile.rdbuf();
-		fss << fragFile.rdbuf();
-		vertFile.close();
-		fragFile.close();
-		fragmentShaderCode = fss.str();
-		vertexShaderCode = vss.str();
+		vert_file.open(vertex_shader_path);
+		frag_file.open(fragment_shader_path);
+		std::stringstream vss, fss;
+		vss << vert_file.rdbuf();
+		fss << frag_file.rdbuf();
+		vert_file.close();
+		frag_file.close();
+		fragment_shader_code = fss.str();
+		vertex_shader_code = vss.str();
 	}
 	catch(std::ifstream::failure& e)
 	{
-		std::cerr << "ERROR :: COULDN'T OPEN FILES " << '\n';
+		std::cerr << "ERROR::COULDN'T OPEN FILES." << '\n';
 		std::cerr << e.what() << ' ' << e.code() << '\n';
 	}
-	auto vertCode {vertexShaderCode.c_str()};
-	auto fragCode {fragmentShaderCode.c_str()};
+	auto vert_code {vertex_shader_code.c_str()};
+	auto frag_code {fragment_shader_code.c_str()};
 
-	unsigned int fragShader,vertShader;
-	fragShader = glCreateShader(GL_FRAGMENT_SHADER);
-	vertShader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertShader, 1, &vertCode, NULL);
-	glShaderSource(fragShader, 1, &fragCode, NULL);
-	glCompileShader(fragShader);
-	glCompileShader(vertShader);
-  std::array<char, 512> infoLog;
+	unsigned int frag_shader {glCreateShader(GL_FRAGMENT_SHADER)}; 
+	unsigned int vert_shader {glCreateShader(GL_VERTEX_SHADER)};
+	glShaderSource(vert_shader, 1, &vert_code, NULL);
+	glShaderSource(frag_shader, 1, &frag_code, NULL);
+	glCompileShader(frag_shader);
+	glCompileShader(vert_shader);
+  std::array<char, 512> info_log;
 	int success {};
-	glGetShaderiv(vertShader, GL_COMPILE_STATUS, &success);
+	glGetShaderiv(vert_shader, GL_COMPILE_STATUS, &success);
 	if (!success) {
-		glGetShaderInfoLog(vertShader, 512, NULL, infoLog.data());
-		std::cout << "ERROR::VERTEX::SHADER::" << infoLog.data() << std::endl;
+		glGetShaderInfoLog(vert_shader, 512, NULL, info_log.data());
+		std::cout << "ERROR::VERTEX::SHADER::" << info_log.data() << std::endl;
 	}
 	
-	glGetShaderiv(fragShader, GL_COMPILE_STATUS, &success);
+	glGetShaderiv(frag_shader, GL_COMPILE_STATUS, &success);
 	if (!success) {
-		glGetShaderInfoLog(fragShader, 512, NULL, infoLog.data());
-		std::cout << "ERROR::FRAGMENT::SHADER::" << infoLog.data() << std::endl;
+		glGetShaderInfoLog(frag_shader, 512, NULL, info_log.data());
+		std::cout << "ERROR::FRAGMENT::SHADER::" << info_log.data() << std::endl;
 	}
 
 	ID = glCreateProgram();
-	glAttachShader(ID, vertShader);
-	glAttachShader(ID, fragShader);
+	glAttachShader(ID, vert_shader);
+	glAttachShader(ID, frag_shader);
 	glLinkProgram(ID);
 
 	glGetProgramiv(ID, GL_LINK_STATUS, &success);
 	if (!success){
-		glGetProgramInfoLog(ID, 512, NULL, infoLog.data());
-		std::cout << "ERROR ::PROGRAM::LINK::" << infoLog.data() << std::endl;
+		glGetProgramInfoLog(ID, 512, NULL, info_log.data());
+		std::cout << "ERROR ::PROGRAM::LINK::" << info_log.data() << std::endl;
 	}
 }
 
@@ -170,10 +181,15 @@ bool Shader::setMatrix(std::string_view name, const glm::mat3x4& m, bool transpo
 }
 
 
-void Shader::use(){
+/**
+ * set the current shader program to be the this shader.
+ * shader.use() must be used before setting uniforms in the shader.
+ * And also must be used before drawing with this shader.
+ */
+void Shader::use() {
 	glUseProgram(ID);
 }
 
-void Shader::cleanUp(){
+Shader::~Shader(){
 	glDeleteProgram(ID);
 }
